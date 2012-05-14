@@ -292,21 +292,43 @@ class BigML
                 :error => error}
         end
 
-        def _check_object_id(type, object)
+        ##########################################################################
+        #
+        # Utils
+        #
+        ##########################################################################
+
+        def _check_object_id(object, type)
             if object.is_a?(Hash) and object.has_key?(:resource)
                 object_id = object[:resource]
-            elsif object.is_a?(String) and eval(type.to_s.upcase+"_RE").match(object)
+            elsif object.is_a?(String)
                 object_id = object
             else
+                LOGGER.error("Wrong id format")
+                return false
+            end
+            if type.nil?
+                types = ['source', 'dataset', 'model', 'prediction']
+                types.each { |vtype| 
+                    if eval(vtype.upcase+"_RE").match(object)
+                        type = vtype
+                    end
+                    }
+                if type.nil?
+                    LOGGER.error("Wrong id format")
+                    return false
+                end
+            elsif not eval(type.to_s.upcase+"_RE").match(object)
                 LOGGER.error("Wrong "+type.to_s+" id")
                 return false
             end
+
             return object_id
         end
 
-        def _is_ready?(type, object)
+        def _is_ready?(object, type)
             # Check whether an object's status is FINISHED.
-            if not object_id = _check_object_id(type, object)
+            if not object_id = _check_object_id(object, type)
                 return false
             end
 
@@ -314,6 +336,23 @@ class BigML
 
             return (object[:code] == HTTP_OK and
                 object[:object]["status"]["code"] == FINISHED)
+        end
+
+        def get_fields(resource)
+            # Return a dictionary of fields
+            if not resource_id = _check_object_id(resource)
+                return false
+            end
+
+            resource = _get("%s%s" % [BIGML_URL, resource_id])
+            if resource['code'] == HTTP_OK
+                if  MODEL_RE.match(resource_id)
+                    return resource['object']['model']['fields']
+                else
+                    return resource['object']['fields']
+                end
+            end
+            return nil
         end
     end
 end
@@ -346,7 +385,7 @@ class BigMLSource < BigML
 
         def get(source)
             # Retrieve a source.
-            if not source_id = _check_object_id(:source, source)
+            if not source_id = _check_object_id(source, :source)
                 return
             end
 
@@ -360,7 +399,7 @@ class BigMLSource < BigML
 
         def update(source, changes)
             # Update a source.
-            if not source_id = _check_object_id(:source, source)
+            if not source_id = _check_object_id(source, :source)
                 return
             end
 
@@ -370,7 +409,7 @@ class BigMLSource < BigML
 
         def delete(source)
             # Delete a source.
-            if not source_id = _check_object_id(:source, source)
+            if not source_id = _check_object_id(source, :source)
                 return
             end
 
@@ -398,12 +437,12 @@ class BigMLDataset < BigML
 
         def create(source, args=nil, wait_time=3)
             # Create a dataset.
-            if not source_id = _check_object_id(:source, source)
+            if not source_id = _check_object_id(source, :source)
                 return
             end
 
             if wait_time > 0
-                until _is_ready?(:source, source_id)
+                until _is_ready?(source_id, :source)
                     time.sleep(wait_time)
                 end
             end
@@ -418,7 +457,7 @@ class BigMLDataset < BigML
 
         def get(dataset)
             # Retrieve a dataset.
-            if not dataset_id = _check_object_id(:dataset, dataset)
+            if not dataset_id = _check_object_id(dataset, :dataset)
                 return
             end
 
@@ -432,7 +471,7 @@ class BigMLDataset < BigML
 
         def update(dataset, changes)
             # Update a dataset.
-            if not dataset_id = _check_object_id(:dataset, dataset)
+            if not dataset_id = _check_object_id(dataset, :dataset)
                 return
             end
 
@@ -442,7 +481,7 @@ class BigMLDataset < BigML
 
         def delete(dataset)
             # Delete a dataset.
-            if not dataset_id = _check_object_id(:dataset, dataset)
+            if not dataset_id = _check_object_id(dataset, :dataset)
                 return
             end
 
@@ -470,12 +509,12 @@ class BigMLModel < BigML
 
         def create(dataset, args=nil, wait_time=3)
             # Create a model.
-            if not dataset_id = _check_object_id(:dataset, dataset)
+            if not dataset_id = _check_object_id(dataset, :dataset)
                 return
             end
 
             if wait_time > 0
-                until _is_ready?(:dataset, dataset_id)
+                until _is_ready?(dataset_id, :dataset)
                     time.sleep(wait_time)
                 end
             end
@@ -491,7 +530,7 @@ class BigMLModel < BigML
 
         def get(model)
             # Retrieve a model.
-            if not model_id = _check_object_id(:model, model)
+            if not model_id = _check_object_id(model, :model)
                 return
             end
 
@@ -505,7 +544,7 @@ class BigMLModel < BigML
 
         def update(model, changes)
             # Update a model.
-            if not model_id = _check_object_id(:model, model)
+            if not model_id = _check_object_id(model, :model)
                 return
             end
 
@@ -515,7 +554,7 @@ class BigMLModel < BigML
 
         def delete(model)
             # Delete a model.
-            if not model_id = _check_object_id(:model, model)
+            if not model_id = _check_object_id(model, :model)
                 return
             end
 
@@ -535,14 +574,14 @@ class BigMLPrediction < BigML
     class << self
 
         def create(smodel, input_data=nil, args=nil,
-                wait_time=3):
+                wait_time=3)
             # Create a new prediction.
-            if not model_id = _check_object_id(:model, model)
+            if not model_id = _check_object_id(model, :model)
                 return
             end
 
             if wait_time > 0
-                until _is_ready?(:model, model_id)
+                until _is_ready?(model_id, :model)
                     time.sleep(wait_time)
                 end
             end
@@ -552,14 +591,15 @@ class BigMLPrediction < BigML
             else
                 input_data = {}
                 fields = get_fields(model_id)
-                inverted_fields = invert_dictionary(fields)
-                inverted_fields.each { |key, value|
-                    input_data[[inverted_fields[key]] = value
+                fields.each { |key, value|
+                    input_data[value[name]] = value
                 }
                 # TODO: no KeyError in ruby? 
             end
+
             if args.nil?
                 args = {}
+            end
             args.update({
                 :model => model_id,
                 :input_data => input_data})
@@ -567,15 +607,13 @@ class BigMLPrediction < BigML
             return _create(PREDICTION_URL, body)
         end
 
-# -------------------------------------------------------------------------------
-
         def get(prediction)
             # Retrieve a prediction.
-            if not prediction_id = _check_object_id(:prediction, prediction)
+            if not prediction_id = _check_object_id(prediction, :prediction)
                 return
             end
 
-            return _get("%s%s" % (BIGML_URL, prediction_id))
+            return _get("%s%s" % [BIGML_URL, prediction_id])
         end
 
         def list(query_string='')
@@ -583,9 +621,9 @@ class BigMLPrediction < BigML
             return _list(PREDICTION_URL, query_string)
         end
 
-        def update(prediction, changes):
+        def update(prediction, changes)
             # Update a prediction.
-            if not prediction_id = _check_object_id(:prediction, prediction)
+            if not prediction_id = _check_object_id(prediction, :prediction)
                 return
             end
 
@@ -595,11 +633,11 @@ class BigMLPrediction < BigML
 
         def delete(prediction)
             # Delete a prediction.
-            if not prediction_id = _check_object_id(:prediction, prediction)
+            if not prediction_id = _check_object_id(prediction, :prediction)
                 return
             end
 
-            return self._delete("%s%s" %
+            return _delete("%s%s" %
                 [BIGML_URL, prediction_id])
         end
     end
