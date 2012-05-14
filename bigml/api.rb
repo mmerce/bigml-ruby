@@ -53,261 +53,269 @@ class BigML
         end
     end
 
-    def _create(url, body, args=SEND_JSON)
-        #Create a new resource. 
-        code = HTTP_INTERNAL_SERVER_ERROR
-        resource_id = nil
-        location = nil
-        resource = nil
-        error = {
-            :status => {
+    class << self
+
+        def _create(url, body, args=SEND_JSON)
+            #Create a new resource. 
+            code = HTTP_INTERNAL_SERVER_ERROR
+            resource_id = nil
+            location = nil
+            resource = nil
+            error = {
+                :status => {
+                    :code => code,
+                    :message => "The resource couldn't be created"}}
+            if args.nil?
+                args = SEND_JSON
+            end
+
+            begin
+                puts args
+                puts body
+                puts url + @@auth
+                response = RestClient.post url + @@auth, body, args
+                code = response.code
+                puts response.body
+                if code == HTTP_CREATED
+                    location = response.headers[:location]
+                    resource = JSON.parse(response.body) # TODO: force_encoding to utf-8
+                    resource_id = resource['resource']
+                    error = nil
+                elsif [
+                    HTTP_BAD_REQUEST,
+                    HTTP_UNAUTHORIZED,
+                    HTTP_PAYMENT_REQUIRED,
+                    HTTP_NOT_FOUND].include? code
+                    error = JSON.parse(response.body) # TODO: force_encoding to utf-8
+                else
+                    LOGGER.error("Unexpected error (#{code})")
+                    code = HTTP_INTERNAL_SERVER_ERROR
+                end
+
+            rescue RestClient::ServerBrokeConnection
+                LOGGER.error("Connection error")
+            rescue RestClient::RequestTimeout
+                LOGGER.error("Request timed out")
+            rescue ArgumentError
+                LOGGER.error("Ambiguous exception occurred")
+            rescue StandardError
+                LOGGER.error("Malformed response")
+            end
+
+            return {
                 :code => code,
-                :message => "The resource couldn't be created"}}
-        begin
-
-            response = RestClient.post url + @@auth, body, args
-            code = response.code
-
-            if code == HTTP_CREATED
-                location = response.headers[:location]
-                resource = JSON.parse(response.body) # TODO: force_encoding to utf-8
-                resource_id = resource['resource']
-                error = nil
-            elsif [
-                HTTP_BAD_REQUEST,
-                HTTP_UNAUTHORIZED,
-                HTTP_PAYMENT_REQUIRED,
-                HTTP_NOT_FOUND].include? code
-                error = JSON.parse(response.body) # TODO: force_encoding to utf-8
-            else
-                LOGGER.error("Unexpected error (#{code})")
-                code = HTTP_INTERNAL_SERVER_ERROR
-            end
-
-        rescue RestClient::ServerBrokeConnection
-            LOGGER.error("Connection error")
-        rescue RestClient::RequestTimeout
-            LOGGER.error("Request timed out")
-        rescue ArgumentError
-            LOGGER.error("Ambiguous exception occurred")
-        rescue StandardError
-            LOGGER.error("Malformed response")
+                :resource => resource_id,
+                :location => location,
+                :object => resource,
+                :error => error} 
         end
 
-        return {
-            :code => code,
-            :resource => resource_id,
-            :location => location,
-            :object => resource,
-            :error => error} 
-    end
 
+        def _get(url)
+            #Retrieve a resource
+            
+            code = HTTP_INTERNAL_SERVER_ERROR
+            resource_id = nil
+            location = url
+            resource = nil
+            error = {
+                :status => {
+                    :code => HTTP_INTERNAL_SERVER_ERROR,
+                    :message => "The resource couldn't be retrieved"}}
 
-    def _get(url)
-        #Retrieve a resource
-        
-        code = HTTP_INTERNAL_SERVER_ERROR
-        resource_id = nil
-        location = url
-        resource = nil
-        error = {
-            :status => {
-                :code => HTTP_INTERNAL_SERVER_ERROR,
-                "message" => "The resource couldn't be retrieved"}}
+            begin
+                response = RestClient.get url + @@auth, ACCEPT_JSON
+                code = response.code
 
-        begin
-            response = RestClient.get url + @@auth, ACCEPT_JSON
-            code = response.code
+                if code == HTTP_OK
+                    resource = JSON.parse(response.body) # TODO: force_encoding to utf-8
+                    resource_id = resource['resource']
+                    error = nil
+                elsif [HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_NOT_FOUND].include? code
+                    error = JSON.parse(response.body) # TODO: force_encoding to utf-8
+                else
+                    LOGGER.error("Unexpected error (#{code})")
+                    code = HTTP_INTERNAL_SERVER_ERROR
+                end
 
-            if code == HTTP_OK
-                resource = JSON.parse(response.body) # TODO: force_encoding to utf-8
-                resource_id = resource['resource']
-                error = nil
-            elsif [HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_NOT_FOUND].include? code
-                error = JSON.parse(response.body) # TODO: force_encoding to utf-8
-            else
-                LOGGER.error("Unexpected error (#{code})")
-                code = HTTP_INTERNAL_SERVER_ERROR
+            rescue RestClient::ServerBrokeConnection
+                LOGGER.error("Connection error")
+            rescue RestClient::RequestTimeout
+                LOGGER.error("Request timed out")
+            rescue ArgumentError
+                LOGGER.error("Ambiguous exception occurred")
+            rescue StandardError
+                LOGGER.error("Malformed response")
+
             end
 
-        rescue RestClient::ServerBrokeConnection
-            LOGGER.error("Connection error")
-        rescue RestClient::RequestTimeout
-            LOGGER.error("Request timed out")
-        rescue ArgumentError
-            LOGGER.error("Ambiguous exception occurred")
-        rescue StandardError
-            LOGGER.error("Malformed response")
-
-        end
-
-        return {
-            :code => code,
-            :resource => resource_id,
-            :location => location,
-            :object => resource,
-            :error => error}
-    end
-
-
-    def _list(url, query_string='')
-        #List resources
-        
-        code = HTTP_INTERNAL_SERVER_ERROR
-        meta = nil
-        resources = nil
-        error = {
-            :status => {
+            return {
                 :code => code,
-                :message => "The resource couldn't be listed"}}
-        begin
-            response = RestClient.get url + @@auth + query_string, ACCEPT_JSON
-
-            code = response.code
-
-            if code == HTTP_OK
-                resource = JSON.parse(response.body) # TODO: force_encoding to utf-8
-                meta = resource['meta']
-                resources = resource['objects']
-                error = None
-            elsif [HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_NOT_FOUND].include? code
-                error = JSON.parse(response.body) # TODO: force_encoding to utf-8
-            else
-                LOGGER.error("Unexpected error (#{code})")
-                code = HTTP_INTERNAL_SERVER_ERROR
-            end
-
-        rescue RestClient::ServerBrokeConnection
-            LOGGER.error("Connection error")
-        rescue RestClient::RequestTimeout
-            LOGGER.error("Request timed out")
-        rescue ArgumentError
-            LOGGER.error("Ambiguous exception occurred")
-        rescue StandardError
-            LOGGER.error("Malformed response")
+                :resource => resource_id,
+                :location => location,
+                :object => resource,
+                :error => error}
         end
 
-        return {
-            :code => code,
-            :meta => meta,
-            :objects => resources,
-            :error => error}
 
-    end
+        def _list(url, query_string='')
+            #List resources
+            
+            code = HTTP_INTERNAL_SERVER_ERROR
+            meta = nil
+            resources = nil
+            error = {
+                :status => {
+                    :code => code,
+                    :message => "The resource couldn't be listed"}}
+            begin
+                response = RestClient.get url + @@auth + query_string, ACCEPT_JSON
 
-    def _update(url, body)
-        #Update a resource
-        
-        code = HTTP_INTERNAL_SERVER_ERROR
-        resource_id = None
-        location = url
-        resource = None
-        error = {
-            :status => {
+                code = response.code
+
+                if code == HTTP_OK
+                    resource = JSON.parse(response.body) # TODO: force_encoding to utf-8
+                    meta = resource['meta']
+                    resources = resource['objects']
+                    error = None
+                elsif [HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_NOT_FOUND].include? code
+                    error = JSON.parse(response.body) # TODO: force_encoding to utf-8
+                else
+                    LOGGER.error("Unexpected error (#{code})")
+                    code = HTTP_INTERNAL_SERVER_ERROR
+                end
+
+            rescue RestClient::ServerBrokeConnection
+                LOGGER.error("Connection error")
+            rescue RestClient::RequestTimeout
+                LOGGER.error("Request timed out")
+            rescue ArgumentError
+                LOGGER.error("Ambiguous exception occurred")
+            rescue StandardError
+                LOGGER.error("Malformed response")
+            end
+
+            return {
                 :code => code,
-                :message => "The resource couldn't be updated"}}
+                :meta => meta,
+                :objects => resources,
+                :error => error}
 
-        begin
-            response = RestClient.put url + @@auth, body, SEND_JSON   
-
-            code = response.code
-
-            if code == HTTP_ACCEPTED:
-                location = response.headers[:location]
-                resource = JSON.parse(response.body) # TODO: force_encoding to utf-8
-                resource_id = resource['resource']
-                error = nil
-            elsif [
-                HTTP_UNAUTHORIZED,
-                HTTP_PAYMENT_REQUIRED,
-                HTTP_METHOD_NOT_ALLOWED].include? code
-                error = JSON.parse(response.body) # TODO: force_encoding to utf-8
-            else
-                LOGGER.error("Unexpected error (#{code})")
-                code = HTTP_INTERNAL_SERVER_ERROR
-            end
-
-        rescue RestClient::ServerBrokeConnection
-            LOGGER.error("Connection error")
-        rescue RestClient::RequestTimeout
-            LOGGER.error("Request timed out")
-        rescue ArgumentError
-            LOGGER.error("Ambiguous exception occurred")
-        rescue StandardError
-            LOGGER.error("Malformed response")
         end
 
-        return {
-            :code => code,
-            :resource => resource_id,
-            :location => location,
-            :object => resource,
-            :error => error}
-    end
+        def _update(url, body)
+            #Update a resource
+            
+            code = HTTP_INTERNAL_SERVER_ERROR
+            resource_id = None
+            location = url
+            resource = None
+            error = {
+                :status => {
+                    :code => code,
+                    :message => "The resource couldn't be updated"}}
 
-    def _delete(url)
-        #Delete a resource
-        
-        code = HTTP_INTERNAL_SERVER_ERROR
-        error = {
-            :status => {
+            begin
+                response = RestClient.put url + @@auth, body, SEND_JSON   
+
+                code = response.code
+
+                if code == HTTP_ACCEPTED:
+                    location = response.headers[:location]
+                    resource = JSON.parse(response.body) # TODO: force_encoding to utf-8
+                    resource_id = resource['resource']
+                    error = nil
+                elsif [
+                    HTTP_UNAUTHORIZED,
+                    HTTP_PAYMENT_REQUIRED,
+                    HTTP_METHOD_NOT_ALLOWED].include? code
+                    error = JSON.parse(response.body) # TODO: force_encoding to utf-8
+                else
+                    LOGGER.error("Unexpected error (#{code})")
+                    code = HTTP_INTERNAL_SERVER_ERROR
+                end
+
+            rescue RestClient::ServerBrokeConnection
+                LOGGER.error("Connection error")
+            rescue RestClient::RequestTimeout
+                LOGGER.error("Request timed out")
+            rescue ArgumentError
+                LOGGER.error("Ambiguous exception occurred")
+            rescue StandardError
+                LOGGER.error("Malformed response")
+            end
+
+            return {
                 :code => code,
-                :message => "The resource couldn't be deleted"}}
+                :resource => resource_id,
+                :location => location,
+                :object => resource,
+                :error => error}
+        end
 
-        begin
-            response = RestClient.delete url + @@auth
+        def _delete(url)
+            #Delete a resource
+            
+            code = HTTP_INTERNAL_SERVER_ERROR
+            error = {
+                :status => {
+                    :code => code,
+                    :message => "The resource couldn't be deleted"}}
 
-            code = response.code
+            begin
+                response = RestClient.delete url + @@auth
 
-            if code == HTTP_NO_CONTENT:
-                error = nil
-            elsif [HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_NOT_FOUND].include? code
-                error = JSON.parse(response.body) # TODO: force_encoding to utf-8
-            else
-                LOGGER.error("Unexpected error (#{code})")
-                code = HTTP_INTERNAL_SERVER_ERROR
+                code = response.code
+
+                if code == HTTP_NO_CONTENT:
+                    error = nil
+                elsif [HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_NOT_FOUND].include? code
+                    error = JSON.parse(response.body) # TODO: force_encoding to utf-8
+                else
+                    LOGGER.error("Unexpected error (#{code})")
+                    code = HTTP_INTERNAL_SERVER_ERROR
+                end
+
+
+            rescue RestClient::ServerBrokeConnection
+                LOGGER.error("Connection error")
+            rescue RestClient::RequestTimeout
+                LOGGER.error("Request timed out")
+            rescue ArgumentError
+                LOGGER.error("Ambiguous exception occurred")
+            rescue StandardError
+                LOGGER.error("Malformed response")
             end
 
-
-        rescue RestClient::ServerBrokeConnection
-            LOGGER.error("Connection error")
-        rescue RestClient::RequestTimeout
-            LOGGER.error("Request timed out")
-        rescue ArgumentError
-            LOGGER.error("Ambiguous exception occurred")
-        rescue StandardError
-            LOGGER.error("Malformed response")
+            return {
+                :code => code,
+                :error => error}
         end
 
-        return {
-            :code => code,
-            :error => error}
-    end
-
-    def _check_object_id(type, object)
-        if object.is_a?(Hash) and object.has_key?(:resource)
-            object_id = object[:resource]
-        elsif object.is_a?(String) and eval(type.to_s.upcase+"_RE").match(object)
-            object_id = object
-        else
-            LOGGER.error("Wrong "+type.to_s+" id")
-            return false
-        end
-        return object_id
-    end
-
-    def _is_ready?(type, object)
-        # Check whether an object's status is FINISHED.
-        if not object_id = _check_object_id(type, object)
-            return false
+        def _check_object_id(type, object)
+            if object.is_a?(Hash) and object.has_key?(:resource)
+                object_id = object[:resource]
+            elsif object.is_a?(String) and eval(type.to_s.upcase+"_RE").match(object)
+                object_id = object
+            else
+                LOGGER.error("Wrong "+type.to_s+" id")
+                return false
+            end
+            return object_id
         end
 
-        object = _get("#{BIGML_URL}#{object_id}")
-        puts object.inspect
-        return (object[:code] == HTTP_OK and
-            object[:object]["status"]["code"] == FINISHED)
-    end
+        def _is_ready?(type, object)
+            # Check whether an object's status is FINISHED.
+            if not object_id = _check_object_id(type, object)
+                return false
+            end
 
+            object = _get("#{BIGML_URL}#{object_id}")
+
+            return (object[:code] == HTTP_OK and
+                object[:object]["status"]["code"] == FINISHED)
+        end
+    end
 end
 
 ##########################################################################
@@ -319,54 +327,56 @@ end
 
 class BigMLSource < BigML
 
-    def initialize(username=ENV['BIGML_USERNAME'],
-        api_key=ENV['BIGML_API_KEY'])
-        # Initialize httplib and set up username and api_key.
-        super(username, api_key)
-    end
+    class << self
 
-    def create(file_name, args=nil)
-        # Create a new source.
-        if args != nil and args.include? :source_parser
-            args[:source_parser] = args[:source_parser].to_json
+        def initialize(username=ENV['BIGML_USERNAME'],
+            api_key=ENV['BIGML_API_KEY'])
+            # Initialize httplib and set up username and api_key.
+            super(username, api_key)
         end
 
-        return _create(SOURCE_URL, {:file => File.new(File.expand_path("../..", __FILE__)+"/"+file_name)}, args)
-    end
+        def create(file_name, args=nil)
+            # Create a new source.
+            if args != nil and args.include? :source_parser
+                args[:source_parser] = args[:source_parser].to_json
+            end
 
-    def get(source)
-        # Retrieve a source.
-        if not source_id = _check_object_id(:source, source)
-            return
+            return _create(SOURCE_URL, {:file => File.new(File.expand_path("../..", __FILE__)+"/"+file_name)}, args)
         end
 
-        return _get("#{BIGML_URL}#{source_id}")
-    end
+        def get(source)
+            # Retrieve a source.
+            if not source_id = _check_object_id(:source, source)
+                return
+            end
 
-    def list(query_string='')
-        # List all your sources.
-        return _list(SOURCE_URL, query_string)
-    end
-
-    def update(source, changes)
-        # Update a source.
-        if not source_id = _check_object_id(:source, source)
-            return
+            return _get("#{BIGML_URL}#{source_id}")
         end
 
-        body = changes.to_json
-        return _update("#{BIGML_URL}#{source_id}", body)
-    end
-
-    def delete(source)
-        # Delete a source.
-        if not source_id = _check_object_id(:source, source)
-            return
+        def list(query_string='')
+            # List all your sources.
+            return _list(SOURCE_URL, query_string)
         end
 
-        return _delete("#{BIGML_URL}#{source_id}")
-    end
+        def update(source, changes)
+            # Update a source.
+            if not source_id = _check_object_id(:source, source)
+                return
+            end
 
+            body = changes.to_json
+            return _update("#{BIGML_URL}#{source_id}", body)
+        end
+
+        def delete(source)
+            # Delete a source.
+            if not source_id = _check_object_id(:source, source)
+                return
+            end
+
+            return _delete("#{BIGML_URL}#{source_id}")
+        end
+    end
 end 
 
 ##########################################################################
@@ -378,68 +388,228 @@ end
 
 class BigMLDataset < BigML
 
-    def initialize(username=ENV['BIGML_USERNAME'],
-        api_key=ENV['BIGML_API_KEY'])
-        # Initialize httplib and set up username and api_key.
-        super(username, api_key)
-    end
+    class << self
 
-    def create(source, args=nil, wait_time=3)
-        # Create a dataset.
-        if not source_id = _check_object_id(:source, source)
-            return
+        def initialize(username=ENV['BIGML_USERNAME'],
+            api_key=ENV['BIGML_API_KEY'])
+            # Initialize httplib and set up username and api_key.
+            super(username, api_key)
         end
 
-        if wait_time > 0
-            until _is_ready?(:source, source_id)
-                time.sleep(wait_time)
+        def create(source, args=nil, wait_time=3)
+            # Create a dataset.
+            if not source_id = _check_object_id(:source, source)
+                return
             end
-        end
-        if args.nil?
-            args = {}
-        end
-        args.update({
-            :source => source_id})
-        body = args.to_json
-        return _create(DATASET_URL, body)
-    end
 
-    def get(dataset)
-        # Retrieve a dataset.
-        if not dataset_id = _check_object_id(:dataset, dataset)
-            return
-        end
-
-        return _get("%s%s" % [BIGML_URL, dataset_id])
-    end
-
-    def list(query_string='')
-        # List all your datasets.
-        return _list(DATASET_URL, query_string)
-    end
-
-    def update(dataset, changes)
-        # Update a dataset.
-        if not dataset_id = _check_object_id(:dataset, dataset)
-            return
+            if wait_time > 0
+                until _is_ready?(:source, source_id)
+                    time.sleep(wait_time)
+                end
+            end
+            if args.nil?
+                args = {}
+            end
+            args.update({
+                :source => source_id})
+            body = args.to_json
+            return _create(DATASET_URL, body)
         end
 
-        body = changes.to_json
-        return _update("%s%s" % [BIGML_URL, dataset_id], body)
-    end
+        def get(dataset)
+            # Retrieve a dataset.
+            if not dataset_id = _check_object_id(:dataset, dataset)
+                return
+            end
 
-    def delete(dataset)
-        # Delete a dataset.
-        if not dataset_id = _check_object_id(:dataset, dataset)
-            return
+            return _get("%s%s" % [BIGML_URL, dataset_id])
         end
 
-        return _delete("%s%s" % [BIGML_URL, dataset_id])
+        def list(query_string='')
+            # List all your datasets.
+            return _list(DATASET_URL, query_string)
+        end
+
+        def update(dataset, changes)
+            # Update a dataset.
+            if not dataset_id = _check_object_id(:dataset, dataset)
+                return
+            end
+
+            body = changes.to_json
+            return _update("%s%s" % [BIGML_URL, dataset_id], body)
+        end
+
+        def delete(dataset)
+            # Delete a dataset.
+            if not dataset_id = _check_object_id(:dataset, dataset)
+                return
+            end
+
+            return _delete("%s%s" % [BIGML_URL, dataset_id])
+        end
     end
 end
 
+##########################################################################
+#
+# Models
+# https://bigml.com/developers/models
+#
+##########################################################################
 
-result = BigMLDataset.new.delete('dataset/4fb03f3f1552682d12000019')
+class BigMLModel < BigML
 
+    class << self
 
+        def initialize(username=ENV['BIGML_USERNAME'],
+            api_key=ENV['BIGML_API_KEY'])
+            # Initialize httplib and set up username and api_key.
+            super(username, api_key)
+        end
 
+        def create(dataset, args=nil, wait_time=3)
+            # Create a model.
+            if not dataset_id = _check_object_id(:dataset, dataset)
+                return
+            end
+
+            if wait_time > 0
+                until _is_ready?(:dataset, dataset_id)
+                    time.sleep(wait_time)
+                end
+            end
+
+            if args.nil?:
+                args = {}
+            end
+            args.update({
+                :dataset => dataset_id})
+            body = args.to_json
+            return _create(MODEL_URL, body)
+        end
+
+        def get(model)
+            # Retrieve a model.
+            if not model_id = _check_object_id(:model, model)
+                return
+            end
+
+            return _get("%s%s" % [BIGML_URL, model_id])
+        end
+
+        def list(query_string='')
+            # List all your models.
+            return _list(MODEL_URL, query_string)
+        end
+
+        def update(model, changes)
+            # Update a model.
+            if not model_id = _check_object_id(:model, model)
+                return
+            end
+
+            body = changes.to_json
+            return _update("%s%s" % [BIGML_URL, model_id], body)
+        end
+
+        def delete(model)
+            # Delete a model.
+            if not model_id = _check_object_id(:model, model)
+                return
+            end
+
+            return _delete("%s%s" % [BIGML_URL, model_id])
+        end
+    end
+end
+
+##########################################################################
+#
+# Predictions
+# https://bigml.com/developers/predictions
+#
+##########################################################################
+class BigMLPrediction < BigML
+
+    class << self
+
+        def create(smodel, input_data=nil, args=nil,
+                wait_time=3):
+            # Create a new prediction.
+            if not model_id = _check_object_id(:model, model)
+                return
+            end
+
+            if wait_time > 0
+                until _is_ready?(:model, model_id)
+                    time.sleep(wait_time)
+                end
+            end
+
+            if input_data.nil?
+                input_data = {}
+            else
+                input_data = {}
+                fields = get_fields(model_id)
+                inverted_fields = invert_dictionary(fields)
+                inverted_fields.each { |key, value|
+                    input_data[[inverted_fields[key]] = value
+                }
+                # TODO: no KeyError in ruby? 
+            end
+            if args.nil?
+                args = {}
+            args.update({
+                :model => model_id,
+                :input_data => input_data})
+            body = args.to_json
+            return _create(PREDICTION_URL, body)
+        end
+
+# -------------------------------------------------------------------------------
+
+        def get(prediction)
+            # Retrieve a prediction.
+            if not prediction_id = _check_object_id(:prediction, prediction)
+                return
+            end
+
+            return _get("%s%s" % (BIGML_URL, prediction_id))
+        end
+
+        def list(query_string='')
+            # List all your predictions.
+            return _list(PREDICTION_URL, query_string)
+        end
+
+        def update(prediction, changes):
+            # Update a prediction.
+            if not prediction_id = _check_object_id(:prediction, prediction)
+                return
+            end
+
+            body = changes.to_json
+            return _update("%s%s" % [BIGML_URL, prediction_id], body)
+        end
+
+        def delete(prediction)
+            # Delete a prediction.
+            if not prediction_id = _check_object_id(:prediction, prediction)
+                return
+            end
+
+            return self._delete("%s%s" %
+                [BIGML_URL, prediction_id])
+        end
+    end
+end
+
+connection = BigML.new
+source = BigMLSource.create('./data/iris.csv')
+if source.has_key?(:resource)
+    dataset = BigMLDataset.create(source[:resource])
+    if dataset.has_key?(:resource)
+        model = BigMLModel.create(dataset[:resource])
+    end
+end
