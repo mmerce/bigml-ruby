@@ -38,10 +38,6 @@ require 'rest-client'
 require 'logger'
 require 'singleton'
 
-require '../config/constants'
-
-
-
 class BigML
 
     include Singleton
@@ -69,23 +65,19 @@ class BigML
         end
 
         begin
-            puts args
-            puts body
-            puts url + @auth
             response = RestClient.post url + @auth, body, args
             code = response.code
-            puts response.body
             if code == HTTP_CREATED
                 location = response.headers[:location]
-                resource = JSON.parse(response.body) # TODO: force_encoding to utf-8
-                resource_id = resource['resource']
+                resource = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
+                resource_id = resource[:resource]
                 error = nil
             elsif [
                 HTTP_BAD_REQUEST,
                 HTTP_UNAUTHORIZED,
                 HTTP_PAYMENT_REQUIRED,
                 HTTP_NOT_FOUND].include? code
-                error = JSON.parse(response.body) # TODO: force_encoding to utf-8
+                error = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
             else
                 @logger.error("Unexpected error (#{code})")
                 code = HTTP_INTERNAL_SERVER_ERROR
@@ -127,11 +119,11 @@ class BigML
             code = response.code
 
             if code == HTTP_OK
-                resource = JSON.parse(response.body) # TODO: force_encoding to utf-8
-                resource_id = resource['resource']
+                resource = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
+                resource_id = resource[:resource]
                 error = nil
             elsif [HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_NOT_FOUND].include? code
-                error = JSON.parse(response.body) # TODO: force_encoding to utf-8
+                error = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
             else
                 @logger.error("Unexpected error (#{code})")
                 code = HTTP_INTERNAL_SERVER_ERROR
@@ -169,16 +161,15 @@ class BigML
                 :message => "The resource couldn't be listed"}}
         begin
             response = RestClient.get url + @auth + query_string, ACCEPT_JSON
-
             code = response.code
 
             if code == HTTP_OK
-                resource = JSON.parse(response.body) # TODO: force_encoding to utf-8
-                meta = resource['meta']
-                resources = resource['objects']
+                resource = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
+                meta = resource[:meta]
+                resources = resource[:objects]
                 error = None
             elsif [HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_NOT_FOUND].include? code
-                error = JSON.parse(response.body) # TODO: force_encoding to utf-8
+                error = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
             else
                 @logger.error("Unexpected error (#{code})")
                 code = HTTP_INTERNAL_SERVER_ERROR
@@ -221,14 +212,14 @@ class BigML
 
             if code == HTTP_ACCEPTED:
                 location = response.headers[:location]
-                resource = JSON.parse(response.body) # TODO: force_encoding to utf-8
-                resource_id = resource['resource']
+                resource = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
+                resource_id = resource[:resource]
                 error = nil
             elsif [
                 HTTP_UNAUTHORIZED,
                 HTTP_PAYMENT_REQUIRED,
                 HTTP_METHOD_NOT_ALLOWED].include? code
-                error = JSON.parse(response.body) # TODO: force_encoding to utf-8
+                error = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
             else
                 @logger.error("Unexpected error (#{code})")
                 code = HTTP_INTERNAL_SERVER_ERROR
@@ -269,7 +260,7 @@ class BigML
             if code == HTTP_NO_CONTENT:
                 error = nil
             elsif [HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_NOT_FOUND].include? code
-                error = JSON.parse(response.body) # TODO: force_encoding to utf-8
+                error = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
             else
                 @logger.error("Unexpected error (#{code})")
                 code = HTTP_INTERNAL_SERVER_ERROR
@@ -334,7 +325,7 @@ class BigML
         object = _get("#{BIGML_URL}#{object_id}")
 
         return (object[:code] == HTTP_OK and
-            object[:object]["status"]["code"] == FINISHED)
+            object[:object][:status][:code] == FINISHED)
     end
 
     def _get_fields(resource)
@@ -346,308 +337,13 @@ class BigML
         resource = _get("%s%s" % [BIGML_URL, resource_id])
         if resource[:code] == HTTP_OK
             if  MODEL_RE.match(resource_id)
-                return resource[:object]['model']['fields']
+                return resource[:object][:model][:fields]
             else
-                return resource[:object]['fields']
+                return resource[:object][:fields]
             end
         end
         return nil
     end
 
 end
-
-##########################################################################
-#
-# Sources
-# https://bigml.com/developers/sources
-#
-##########################################################################
-
-class BigMLSource 
-
-    @@bigml = BigML.instance
-
-    class << self
-
-        def create(file_name, args=nil)
-            # Create a new source.
-            if args != nil and args.include? :source_parser
-                args[:source_parser] = args[:source_parser].to_json
-            end
-
-            return @@bigml._create(SOURCE_URL, {:file => File.new(File.expand_path("../..", __FILE__)+"/"+file_name)}, args)
-        end
-
-        def get(source)
-            # Retrieve a source.
-            if not source_id = @@bigml._check_object_id(source, :source)
-                return
-            end
-
-            return @@bigml._get("#{BIGML_URL}#{source_id}")
-        end
-
-        def list(query_string='')
-            # List all your sources.
-            return @@bigml._list(SOURCE_URL, query_string)
-        end
-
-        def update(source, changes)
-            # Update a source.
-            if not source_id = @@bigml._check_object_id(source, :source)
-                return
-            end
-
-            body = changes.to_json
-            return @@bigml._update("#{BIGML_URL}#{source_id}", body)
-        end
-
-        def delete(source)
-            # Delete a source.
-            if not source_id = @@bigml._check_object_id(source, :source)
-                return
-            end
-
-            return _delete("#{BIGML_URL}#{source_id}")
-        end
-    end
-end 
-
-##########################################################################
-#
-# Datasets
-# https://bigml.com/developers/datasets
-#
-##########################################################################
-
-class BigMLDataset
-
-    @@bigml = BigML.instance
-
-    class << self
-
-        def create(source, args=nil, wait_time=3)
-            # Create a dataset.
-            if not source_id = @@bigml._check_object_id(source, :source)
-                return
-            end
-
-            if wait_time > 0
-                until @@bigml._is_ready?(source_id, :source)
-                    time.sleep(wait_time)
-                end
-            end
-            if args.nil?
-                args = {}
-            end
-            args.update({
-                :source => source_id})
-            body = args.to_json
-            return @@bigml._create(DATASET_URL, body)
-        end
-
-        def get(dataset)
-            # Retrieve a dataset.
-            if not dataset_id = @@bigml._check_object_id(dataset, :dataset)
-                return
-            end
-
-            return @@bigml._get("%s%s" % [BIGML_URL, dataset_id])
-        end
-
-        def list(query_string='')
-            # List all your datasets.
-            return @@bigml._list(DATASET_URL, query_string)
-        end
-
-        def update(dataset, changes)
-            # Update a dataset.
-            if not dataset_id = @@bigml._check_object_id(dataset, :dataset)
-                return
-            end
-
-            body = changes.to_json
-            return _update("%s%s" % [BIGML_URL, dataset_id], body)
-        end
-
-        def delete(dataset)
-            # Delete a dataset.
-            if not dataset_id = @@bigml._check_object_id(dataset, :dataset)
-                return
-            end
-
-            return @@bigml._delete("%s%s" % [BIGML_URL, dataset_id])
-        end
-    end
-end
-
-##########################################################################
-#
-# Models
-# https://bigml.com/developers/models
-#
-##########################################################################
-
-class BigMLModel
-
-    @@bigml = BigML.instance
-
-    class << self
-
-        def create(dataset, args=nil, wait_time=3)
-            # Create a model.
-            if not dataset_id = @@bigml._check_object_id(dataset, :dataset)
-                return
-            end
-
-            if wait_time > 0
-                until @@bigml._is_ready?(dataset_id, :dataset)
-                    time.sleep(wait_time)
-                end
-            end
-
-            if args.nil?:
-                args = {}
-            end
-            args.update({
-                :dataset => dataset_id})
-            body = args.to_json
-            return @@bigml._create(MODEL_URL, body)
-        end
-
-        def get(model)
-            # Retrieve a model.
-            if not model_id = @@bigml._check_object_id(model, :model)
-                return
-            end
-
-            return @@bigml._get("%s%s" % [BIGML_URL, model_id])
-        end
-
-        def list(query_string='')
-            # List all your models.
-            return @@bigml._list(MODEL_URL, query_string)
-        end
-
-        def update(model, changes)
-            # Update a model.
-            if not model_id = @@bigml._check_object_id(model, :model)
-                return
-            end
-
-            body = changes.to_json
-            return @@bigml._update("%s%s" % [BIGML_URL, model_id], body)
-        end
-
-        def delete(model)
-            # Delete a model.
-            if not model_id = @@bigml._check_object_id(model, :model)
-                return
-            end
-
-            return @@bigml._delete("%s%s" % [BIGML_URL, model_id])
-        end
-    end
-end
-
-##########################################################################
-#
-# Predictions
-# https://bigml.com/developers/predictions
-#
-##########################################################################
-class BigMLPrediction
-
-    @@bigml = BigML.instance
-
-    class << self
-
-        def create(model, input_data=nil, args=nil,
-                wait_time=3)
-            # Create a new prediction.
-            if not model_id = @@bigml._check_object_id(model, :model)
-                return
-            end
-
-            if wait_time > 0
-                until @@bigml._is_ready?(model_id, :model)
-                    time.sleep(wait_time)
-                end
-            end
-
-            if input_data.nil?
-                input_data = {}
-            else
-                new_input_data = {}
-                fields = @@bigml._get_fields(model_id)
-                inverted_fields = {}
-                fields.each { |key, value|
-                    inverted_fields[value[name]] = key
-                }       
-                input_data.each { |key, value|
-                    new_input_data[inverted_fields[key]] = value
-                }
-                input_data = new_input_data
-                # TODO: no KeyError in ruby? 
-            end
-
-            if args.nil?
-                args = {}
-            end
-            args.update({
-                :model => model_id,
-                :input_data => input_data})
-            body = args.to_json
-            return @@bigml._create(PREDICTION_URL, body)
-        end
-
-        def get(prediction)
-            # Retrieve a prediction.
-            if not prediction_id = @@bigml._check_object_id(prediction, :prediction)
-                return
-            end
-
-            return @@bigml._get("%s%s" % [BIGML_URL, prediction_id])
-        end
-
-        def list(query_string='')
-            # List all your predictions.
-            return @@bigml._list(PREDICTION_URL, query_string)
-        end
-
-        def update(prediction, changes)
-            # Update a prediction.
-            if not prediction_id = @@bigml._check_object_id(prediction, :prediction)
-                return
-            end
-
-            body = changes.to_json
-            return @@bigml._update("%s%s" % [BIGML_URL, prediction_id], body)
-        end
-
-        def delete(prediction)
-            # Delete a prediction.
-            if not prediction_id = @@bigml._check_object_id(prediction, :prediction)
-                return
-            end
-
-            return @@bigml._delete("%s%s" %
-                [BIGML_URL, prediction_id])
-        end
-    end
-end
-
-
-
-source = BigMLSource.create('./data/iris.csv')
-if source.has_key?(:resource)
-    dataset = BigMLDataset.create(source)
-    if dataset.has_key?(:resource)
-        model = BigMLModel.create(dataset)
-        if model.has_key?(:resource)
-            prediction = BigMLPrediction.create(model, {'sepal width' => 1})
-        end
-    end
-end
-
 
