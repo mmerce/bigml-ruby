@@ -23,7 +23,7 @@ This is a simple binding to BigML.io, the BigML API.
 Example usage (assuming that you have previously set up the BIGML_USERNAME and
 BIGML_API_KEY environment variables):
 
-require 'bigml/api'
+require 'bigml'
 
 source = BigMLSource.create('./data/iris.csv')
 dataset = BigMLDataset.create(source)
@@ -197,9 +197,9 @@ class BigML
         #Update a resource
         
         code = HTTP_INTERNAL_SERVER_ERROR
-        resource_id = None
+        resource_id = nil
         location = url
-        resource = None
+        resource = nil
         error = {
             :status => {
                 :code => code,

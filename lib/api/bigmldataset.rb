@@ -71,7 +71,7 @@ class BigMLDataset
             end
 
             body = changes.to_json
-            return _update("%s%s" % [BIGML_URL, dataset_id], body)
+            return @@bigml._update("%s%s" % [BIGML_URL, dataset_id], body)
         end
 
         def delete(dataset)
