@@ -165,6 +165,7 @@ class BigML
             :status => {
                 :code => code,
                 :message => "The resource couldn't be listed"}}
+
         begin
             response = RestClient.get url + @auth + query_string, BigML::ACCEPT_JSON
             code = response.code
@@ -173,7 +174,7 @@ class BigML
                 resource = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
                 meta = resource[:meta]
                 resources = resource[:objects]
-                error = None
+                error = nil
             elsif [BigML::HTTP_BAD_REQUEST, BigML::HTTP_UNAUTHORIZED, BigML::HTTP_NOT_FOUND].include? code
                 error = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
             else
@@ -215,7 +216,7 @@ class BigML
             response = RestClient.put url + @auth, body, BigML::SEND_JSON   
 
             code = response.code
-            puts response.body
+
             if code == BigML::HTTP_ACCEPTED:
                 location = response.headers[:location]
                 resource = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8

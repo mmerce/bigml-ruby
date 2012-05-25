@@ -581,11 +581,11 @@ like the one you get when you create a new one. However the status
 code will be `BigML::HTTP_ACCEPTED` if the resource can be updated
 without problems or one of the HTTP standard error codes otherwise.
 
-```python
-api.update_source(source, {"name": "new name"})
-api.update_dataset(dataset, {"name": "new name"})
-api.update_model(model, {"name": "new name"})
-api.update_prediction(prediction, {"name": "new name"})
+```ruby
+BigMLSource.update(source, {:name => "new name"})
+BigMLDataset.update(dataset, {:name => "new name"})
+BigMLModel.update(model, {:name => "new name"})
+BigMLPrediction.update(prediction, {:name => "new name"})
 ```
 
 ## Deleting Resources
@@ -593,21 +593,21 @@ api.update_prediction(prediction, {"name": "new name"})
 Resources can be deleted individually using the corresponding method
 for each type of resource.
 
-```python
-api.delete_source(source)
-api.delete_dataset(dataset)
-api.delete_model(model)
-api.delete_prediction(prediction)
+```ruby
+BigMLSource.delete(source)
+BigMLDataset.delete(dataset)
+BigMLModel.delete(model)
+BigMLPrediction.delete(prediction)
 ```
 
 Each of the calls above will return a dictionary with the following
 keys:
 
 * **code** If the request is successful, the code will be a
-  `bigml.api.HTTP_NO_CONTENT` (204) status code. Otherwise, it wil be
+  `BigML::HTTP_NO_CONTENT` (204) status code. Otherwise, it wil be
   one of the standard HTTP error codes. See the
   [documentation on status codes](https://bigml.com/developers/status_codes)
   for more info.
 * **error** If the request does not succeed, it will contain a
-  dictionary with an error code and a message. It will be `None`
+  dictionary with an error code and a message. It will be `nil`
   otherwise.
