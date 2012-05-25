@@ -35,7 +35,7 @@ class BigMLSource
                 args[:source_parser] = args[:source_parser].to_json
             end
 
-            return @@bigml._create(SOURCE_URL, {:file => File.new(Dir.pwd+'/'+file_name)}, args)
+            return @@bigml._create(BigMLConstants::SOURCE_URL, {:file => File.new(Dir.pwd+'/'+file_name)}, args)
         end
 
         def get(source)
@@ -44,12 +44,12 @@ class BigMLSource
                 return
             end
 
-            return @@bigml._get("#{BIGML_URL}#{source_id}")
+            return @@bigml._get("#{BigMLConstants::BIGML_URL}#{source_id}")
         end
 
         def list(query_string='')
             # List all your sources.
-            return @@bigml._list(SOURCE_URL, query_string)
+            return @@bigml._list(BigMLConstants::SOURCE_URL, query_string)
         end
 
         def update(source, changes)
@@ -59,7 +59,7 @@ class BigMLSource
             end
 
             body = changes.to_json
-            return @@bigml._update("#{BIGML_URL}#{source_id}", body)
+            return @@bigml._update("#{BigMLConstants::BIGML_URL}#{source_id}", body)
         end
 
         def delete(source)
@@ -68,7 +68,12 @@ class BigMLSource
                 return
             end
 
-            return @@bigml._delete("#{BIGML_URL}#{source_id}")
+            return @@bigml._delete("#{BigMLConstants::BIGML_URL}#{source_id}")
+        end
+
+        def get_fields(source)
+            # Get fields from source
+            return @@bigml._get_fields(source)
         end
     end
 end 

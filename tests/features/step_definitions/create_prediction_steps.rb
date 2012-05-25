@@ -5,8 +5,8 @@ end
 
 And /I wait until the (source|dataset|model|prediction) is ready less than (\d+)/ do |object, secs|
     start = Time.now
-    code1 = FINISHED
-    code2 = FAULTY
+    code1 = BigMLConstants::FINISHED
+    code2 = BigMLConstants::FAULTY
     @object = eval("@%s" % [object])
     while (@object[:object][:status][:code] != code1 and
        @object[:object][:status][:code] != code2 and

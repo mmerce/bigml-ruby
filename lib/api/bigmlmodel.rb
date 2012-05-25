@@ -48,7 +48,7 @@ class BigMLModel
             args.update({
                 :dataset => dataset_id})
             body = args.to_json
-            return @@bigml._create(MODEL_URL, body)
+            return @@bigml._create(BigMLConstants::MODEL_URL, body)
         end
 
         def get(model)
@@ -57,12 +57,12 @@ class BigMLModel
                 return
             end
 
-            return @@bigml._get("%s%s" % [BIGML_URL, model_id])
+            return @@bigml._get("%s%s" % [BigMLConstants::BIGML_URL, model_id])
         end
 
         def list(query_string='')
             # List all your models.
-            return @@bigml._list(MODEL_URL, query_string)
+            return @@bigml._list(BigMLConstants::MODEL_URL, query_string)
         end
 
         def update(model, changes)
@@ -72,7 +72,7 @@ class BigMLModel
             end
 
             body = changes.to_json
-            return @@bigml._update("%s%s" % [BIGML_URL, model_id], body)
+            return @@bigml._update("%s%s" % [BigMLConstants::BIGML_URL, model_id], body)
         end
 
         def delete(model)
@@ -81,7 +81,7 @@ class BigMLModel
                 return
             end
 
-            return @@bigml._delete("%s%s" % [BIGML_URL, model_id])
+            return @@bigml._delete("%s%s" % [BigMLConstants::BIGML_URL, model_id])
         end
     end
 end
