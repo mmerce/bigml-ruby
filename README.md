@@ -324,23 +324,13 @@ BigML::UNKNOWN
 BigML::RUNNABLE
 ```
 
-
-
-
-
----------------------- TODO: change from python to ruby ------------------
-
-
-
-
-
 You can query the status of any resource with the `status` method.
 
-```python
-api.status(source)
-api.status(dataset)
-api.status(model)
-api.status(prediction)
+```ruby
+BigMLSource.status(source)
+BigMLDataset.status(dataset)
+BigMLModel.status(model)
+BigMLPrediction.status(prediction)
 ```
 
 Before invoking the creation of a new resource, the library checks
@@ -358,13 +348,13 @@ the options for source creation described in the
 
 Here's a sample invocation:
 
-```python
+```ruby
 
-from bigml.api import BigML
-api = BigML()
+require 'rubygems'
+require 'bigml'
 
-source = api.create_source('./data/iris.csv',
-    {'name': 'my source', 'source_parser': {'missing_tokens': ['?']}})
+source = BigMLSource.create('./data/iris.csv',
+    {:name => 'my source', :source_parser => {:missing_tokens => ['?']}})
 ```
 
 As already mentioned, source creation is asynchronous: the initial
@@ -372,8 +362,8 @@ resource status code will be either `WAITING` or `QUEUED`. You can
 retrieve the updated status at any time using the corresponding get
 method. For example, to get the status of our source we would use:
 
-```python
-api.status(source)
+```ruby
+BigMLSource.status(source)
 ```
 
 ### Creating datasets
@@ -386,12 +376,12 @@ the additional arguments accepted by BigML and documented
 For example, to create a dataset named "my dataset" with the first
 1024 bytes of a source, you can submit the following request:
 
-```python
-dataset = api.create_dataset(source, {"name": "my dataset", "size": 1024})
+```ruby
+dataset = BigMLDataset.create(source, {:name => "my dataset", :size => 1024})
 ```
 
 Upon success, the dataset creation job will be queued for execution,
-and you can follow its evolution using `api.status(dataset)`.
+and you can follow its evolution using `BigMLDataset.status(dataset)`.
 
 ### Creating models
 
@@ -404,13 +394,13 @@ For example, to create a model only including the first two fields and
 the first 10 instances in the dataset, you can use the following
 invocation:
 
-```python
-model = api.create_model(dataset, {
-    "name": "my model", "input_fields": ["000000", "000001"], "range": [1, 10]})
+```ruby
+model = BigMLModel.create(dataset, {
+    :name => "my model", :input_fields => ["000000", "000001"], :range => [1, 10]})
 ```
 
 Again, the model is scheduled for creation, and you can retrieve its
-status at any time by means of `api.status(model)` .
+status at any time by means of `BigMLModel.status(model)` .
 
 ### Creating predictions
 
@@ -418,24 +408,24 @@ You can now use the model resource identifier together with some input
 parameters to ask for predictions, using the `create_prediction`
 method. You can also give the prediction a name.
 
-```python
-prediction = api.create_prediction(model,
-                                   {"sepal length": 5,
-                                    "sepal width": 2.5},
-                                    {"name": "my prediction"})
+```ruby
+prediction = BigMLPrediction.create(model,
+                                   {'sepal length' => 5,
+                                    'sepal width' => 2.5},
+                                    {:name => "my prediction"})
 ```
 
-To see the prediction you can use `pprint`:
+To see the prediction you can use `pp`:
 
-```python
-api.pprint(prediction)
+```ruby
+pp prediction
 ```
 
 ## Reading Resources
 
 When retrieved individually, resources are returned as a dictionary
 identical to the one you get when you create a new resource. However,
-the status code will be `bigml.api.HTTP_OK` if the resource can be
+the status code will be `BigML::HTTP_OK` if the resource can be
 retrieved without problems, or one of the HTTP standard error codes
 otherwise.
 
@@ -443,17 +433,17 @@ otherwise.
 
 You can list resources with the appropriate api method:
 
-```python
-api.list_sources()
-api.list_datasets()
-api.list_models()
-api.list_predictions()
+```ruby
+BigMLSource.list()
+BigMLDataset.list()
+BigMLModel.list()
+BigMLPredictions.list()
 ```
 
 you will receive a dictionary with the following keys:
 
 * **code**: If the request is successful you will get a
-    `bigml.api.HTTP_OK` (200) status code. Otherwise, it will be one
+    `BigML::HTTP_OK` (200) status code. Otherwise, it will be one
     of the standard HTTP error codes. See
     [BigML documentation on status codes](https://bigml.com/developers/status_codes)
     for more info.
@@ -483,29 +473,42 @@ A few examples:
 
 #### Ids of the first 5 sources created before April 1st, 2012
 
-```python
-[source['resource'] for source in
-  api.list_sources("limit=5;created__lt=2012-04-1")['objects']]
+```ruby
+sources = []
+list = BigMLSource.list("limit=5;created__lt=2012-04-1")[:objects]
+if not list.nil?
+  sources = list.map{ |source| source[:resource] }
+end
 ```
 
 #### Name of the first 10 datasets bigger than 1MB
 
-```python
-[dataset['name'] for dataset in
-  api.list_datasets("limit=10;size__gt=1048576")['objects']]
+```ruby
+datasets = []
+list = BigMLDataset.list("limit=10;size__gt=1048576")[:objects]
+if not list.nil?
+  datasets = list.map{ |dataset| dataset[:resource] }
+end
 ```
 
 #### Name of models with more than 5 fields (columns)
 
-```python
-[model['name'] for model in api.list_models("columns__gt=5")['objects']]
+```ruby
+models = []
+list = BigMLModel.list("columns__gt=5")[:objects]
+if not list.nil?
+  models = list.map{ |model| model[:resource] }
+end
 ```
 
 #### Ids of predictions whose model has not been deleted
 
-```python
-[prediction['resource'] for prediction in
-  api.list_predictions("model_status=true")['objects']]
+```ruby
+predictions = []
+list = BigMLPrediction.list("model_status=true")[:objects]
+if not list.nil?
+  predictions = list.map{ |prediction| prediction[:resource] }
+end
 ```
 
 
@@ -519,36 +522,63 @@ A few examples:
 
 #### Name of sources ordered by size
 
-```python
-[source['name'] for source in api.list_sources("order_by=size")['objects']]
+```ruby
+sources = []
+list = BigMLSource.list("order_by=size")[:objects]
+if not list.nil?
+  sources = list.map{ |source| source[:name] }
+end
 ```
 
 #### Number of instances in datasets created before April 1st, 2012 ordered by size
 
-```python
-[dataset['rows'] for dataset in
-  api.list_datasets("created__lt=2012-04-1;order_by=size")['objects']]
+```ruby
+datasets = []
+list = BigMLDataset.list("created__lt=2012-04-1;order_by=size")[:objects]
+if not list.nil?
+  datasets = list.map{ |dataset| dataset[:rows] }
+end
 ```
 
 #### Model ids ordered by number of predictions (in descending order).
 
-```python
-[model['resource'] for model in
-  api.list_models("order_by=-number_of_predictions")['objects']]
+```ruby
+models = []
+list = BigMLModel.list("order_by=-number_of_predictions")[:objects]
+if not list.nil?
+  models = list.map{ |model| model[:resource] }
+end
 ```
 
 #### Name of predictions ordered by name.
 
-```python
-[prediction['name'] for prediction in
-  api.list_predictions("order_by=name")['objects']]
+```ruby
+predictions = []
+list = BigMLPrediction.list("order_by=name")[:objects]
+if not list.nil?
+  predictions = list.map{ |prediction| prediction[:name] }
+end
 ```
+
+
+
+
+
+
+
+---------------------- TODO: change from python to ruby ------------------
+
+
+
+
+
+
 
 ## Updating Resources
 
 When you update a resource, it is returned in a dictionary exactly
 like the one you get when you create a new one. However the status
-code will be `bigml.api.HTTP_ACCEPTED` if the resource can be updated
+code will be `BigML::HTTP_ACCEPTED` if the resource can be updated
 without problems or one of the HTTP standard error codes otherwise.
 
 ```python

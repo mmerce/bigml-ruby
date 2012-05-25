@@ -215,7 +215,7 @@ class BigML
             response = RestClient.put url + @auth, body, BigML::SEND_JSON   
 
             code = response.code
-
+            puts response.body
             if code == BigML::HTTP_ACCEPTED:
                 location = response.headers[:location]
                 resource = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
@@ -294,11 +294,11 @@ class BigML
     #
     ##########################################################################
 
-    def _check_object_id(object, type=nil)
-        if object.is_a?(Hash) and object.has_key?(:resource)
-            object_id = object[:resource]
-        elsif object.is_a?(String)
-            object_id = object
+    def _check_resource_id(resource, type=nil)
+        if resource.is_a?(Hash) and resource.has_key?(:resource)
+            resource_id = resource[:resource]
+        elsif resource.is_a?(String)
+            resource_id = resource
         else
             @logger.error("Wrong id format")
             return false
@@ -307,7 +307,7 @@ class BigML
         if type.nil?
             types = ['source', 'dataset', 'model', 'prediction']
             types.each { |vtype| 
-                if eval("BigML::"+vtype.upcase+"_RE").match(object_id)
+                if eval("BigML::"+vtype.upcase+"_RE").match(resource_id)
                     type = vtype
                 end
                 }
@@ -315,29 +315,29 @@ class BigML
                 @logger.error("Wrong id format")
                 return false
             end
-        elsif not eval("BigML::"+type.to_s.upcase+"_RE").match(object_id)
+        elsif not eval("BigML::"+type.to_s.upcase+"_RE").match(resource_id)
             @logger.error("Wrong "+type.to_s+" id")
             return false
         end
 
-        return object_id
+        return resource_id
     end
 
-    def _is_ready?(object, type)
+    def _is_ready?(resource, type)
         # Check whether an object's status is FINISHED.
-        if not object_id = _check_object_id(object, type)
+        if not resource_id = _check_resource_id(resource, type)
             return false
         end
 
-        object = _get("#{BigML::BIGML_URL}#{object_id}")
+        resource = _get("#{BigML::BIGML_URL}#{resource_id}")
 
-        return (object[:code] == BigML::HTTP_OK and
-            object[:object][:status][:code] == BigML::FINISHED)
+        return (resource[:code] == BigML::HTTP_OK and
+            resource[:object][:status][:code] == BigML::FINISHED)
     end
 
     def _get_fields(resource)
         # Return a dictionary of fields
-        if not resource_id = _check_object_id(resource)
+        if not resource_id = _check_resource_id(resource)
             return false
         end
 
@@ -352,5 +352,20 @@ class BigML
         return nil
     end
 
+    def _status(resource)
+        #Maps status code to string"
+
+        if not resource_id = _check_resource_id(resource)
+            return false
+        end
+
+        resource = _get("%s%s" % [BigML::BIGML_URL, resource_id])
+        code = resource[:object][:status][:code]
+        if BigML::STATUSES.has_key?(code)
+            return BigML::STATUSES[code]
+        else
+            return "UNKNOWN"
+        end
+    end
 end
 

@@ -32,7 +32,7 @@ class BigMLModel
 
         def create(dataset, args=nil, wait_time=3)
             # Create a model.
-            if not dataset_id = @@bigml._check_object_id(dataset, :dataset)
+            if not dataset_id = @@bigml._check_resource_id(dataset, :dataset)
                 return
             end
 
@@ -53,7 +53,7 @@ class BigMLModel
 
         def get(model)
             # Retrieve a model.
-            if not model_id = @@bigml._check_object_id(model, :model)
+            if not model_id = @@bigml._check_resource_id(model, :model)
                 return
             end
 
@@ -67,7 +67,7 @@ class BigMLModel
 
         def update(model, changes)
             # Update a model.
-            if not model_id = @@bigml._check_object_id(model, :model)
+            if not model_id = @@bigml._check_resource_id(model, :model)
                 return
             end
 
@@ -77,11 +77,16 @@ class BigMLModel
 
         def delete(model)
             # Delete a model.
-            if not model_id = @@bigml._check_object_id(model, :model)
+            if not model_id = @@bigml._check_resource_id(model, :model)
                 return
             end
 
             return @@bigml._delete("%s%s" % [BigML::BIGML_URL, model_id])
+        end
+
+        def status(model)
+            # Get model's status
+            return @@bigml._status(model)
         end
     end
 end

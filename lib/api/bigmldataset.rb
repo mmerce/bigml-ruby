@@ -32,7 +32,7 @@ class BigMLDataset
 
         def create(source, args=nil, wait_time=3)
             # Create a dataset.
-            if not source_id = @@bigml._check_object_id(source, :source)
+            if not source_id = @@bigml._check_resource_id(source, :source)
                 return
             end
 
@@ -52,7 +52,7 @@ class BigMLDataset
 
         def get(dataset)
             # Retrieve a dataset.
-            if not dataset_id = @@bigml._check_object_id(dataset, :dataset)
+            if not dataset_id = @@bigml._check_resource_id(dataset, :dataset)
                 return
             end
 
@@ -66,7 +66,7 @@ class BigMLDataset
 
         def update(dataset, changes)
             # Update a dataset.
-            if not dataset_id = @@bigml._check_object_id(dataset, :dataset)
+            if not dataset_id = @@bigml._check_resource_id(dataset, :dataset)
                 return
             end
 
@@ -76,7 +76,7 @@ class BigMLDataset
 
         def delete(dataset)
             # Delete a dataset.
-            if not dataset_id = @@bigml._check_object_id(dataset, :dataset)
+            if not dataset_id = @@bigml._check_resource_id(dataset, :dataset)
                 return
             end
 
@@ -86,6 +86,11 @@ class BigMLDataset
         def get_fields(dataset)
             # Get fields from dataset
             return @@bigml._get_fields(dataset)
+        end
+
+        def status(dataset)
+            # Get dataset's status
+            return @@bigml._status(dataset)
         end
     end
 end

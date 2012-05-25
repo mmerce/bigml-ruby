@@ -40,7 +40,7 @@ class BigMLSource
 
         def get(source)
             # Retrieve a source.
-            if not source_id = @@bigml._check_object_id(source, :source)
+            if not source_id = @@bigml._check_resource_id(source, :source)
                 return
             end
 
@@ -54,7 +54,7 @@ class BigMLSource
 
         def update(source, changes)
             # Update a source.
-            if not source_id = @@bigml._check_object_id(source, :source)
+            if not source_id = @@bigml._check_resource_id(source, :source)
                 return
             end
 
@@ -64,7 +64,7 @@ class BigMLSource
 
         def delete(source)
             # Delete a source.
-            if not source_id = @@bigml._check_object_id(source, :source)
+            if not source_id = @@bigml._check_resource_id(source, :source)
                 return
             end
 
@@ -74,6 +74,11 @@ class BigMLSource
         def get_fields(source)
             # Get fields from source
             return @@bigml._get_fields(source)
+        end
+
+        def status(source)
+            # Get source's status
+            return @@bigml._status(source)
         end
     end
 end 

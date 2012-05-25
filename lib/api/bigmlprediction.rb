@@ -33,7 +33,7 @@ class BigMLPrediction
         def create(model, input_data=nil, args=nil,
                 wait_time=3)
             # Create a new prediction.
-            if not model_id = @@bigml._check_object_id(model, :model)
+            if not model_id = @@bigml._check_resource_id(model, :model)
                 return
             end
 
@@ -70,7 +70,7 @@ class BigMLPrediction
 
         def get(prediction)
             # Retrieve a prediction.
-            if not prediction_id = @@bigml._check_object_id(prediction, :prediction)
+            if not prediction_id = @@bigml._check_resource_id(prediction, :prediction)
                 return
             end
 
@@ -84,7 +84,7 @@ class BigMLPrediction
 
         def update(prediction, changes)
             # Update a prediction.
-            if not prediction_id = @@bigml._check_object_id(prediction, :prediction)
+            if not prediction_id = @@bigml._check_resource_id(prediction, :prediction)
                 return
             end
 
@@ -94,12 +94,17 @@ class BigMLPrediction
 
         def delete(prediction)
             # Delete a prediction.
-            if not prediction_id = @@bigml._check_object_id(prediction, :prediction)
+            if not prediction_id = @@bigml._check_resource_id(prediction, :prediction)
                 return
             end
 
             return @@bigml._delete("%s%s" %
                 [BigML::BIGML_URL, prediction_id])
+        end
+
+        def status(prediction)
+            # Get prediction's status
+            return @@bigml._status(prediction)
         end
     end
 end

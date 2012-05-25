@@ -51,14 +51,14 @@ module BigMLConstants
     RUNNABLE = -3
 
     STATUSES = {
-        :WAITING => "WAITING",
-        :QUEUED => "QUEUED",
-        :STARTED => "STARTED",
-        :IN_PROGRESS => "IN_PROGRESS",
-        :SUMMARIZED => "SUMMARIZED",
-        :FINISHED => "FINISHED",
-        :FAULTY => "FAULTY",
-        :UNKNOWN => "UNKNOWN",
-        :RUNNABLE => "RUNNABLE"
+        WAITING => "WAITING",
+        QUEUED => "QUEUED",
+        STARTED => "STARTED",
+        IN_PROGRESS => "IN_PROGRESS",
+        SUMMARIZED => "SUMMARIZED",
+        FINISHED => "FINISHED",
+        FAULTY => "FAULTY",
+        UNKNOWN => "UNKNOWN",
+        RUNNABLE => "RUNNABLE"
     }
 end
