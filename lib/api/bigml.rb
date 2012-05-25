@@ -42,6 +42,7 @@ require 'singleton'
 class BigML
 
     include Singleton
+    include BigMLConstants
 
     def initialize(username=ENV['BIGML_USERNAME'],
         api_key=ENV['BIGML_API_KEY'],
@@ -55,9 +56,9 @@ class BigML
         @auth = "?username=#{username};api_key=#{api_key};"
     end
 
-    def _create(url, body, args=BigMLConstants::SEND_JSON)
+    def _create(url, body, args=BigML::SEND_JSON)
         #Create a new resource. 
-        code = BigMLConstants::HTTP_INTERNAL_SERVER_ERROR
+        code = BigML::HTTP_INTERNAL_SERVER_ERROR
         resource_id = nil
         location = nil
         resource = nil
@@ -66,26 +67,26 @@ class BigML
                 :code => code,
                 :message => "The resource couldn't be created"}}
         if args.nil?
-            args = BigMLConstants::SEND_JSON
+            args = BigML::SEND_JSON
         end
 
         begin
             response = RestClient.post url + @auth, body, args
             code = response.code
-            if code == BigMLConstants::HTTP_CREATED
+            if code == BigML::HTTP_CREATED
                 location = response.headers[:location]
                 resource = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
                 resource_id = resource[:resource]
                 error = nil
             elsif [
-                BigMLConstants::HTTP_BAD_REQUEST,
-                BigMLConstants::HTTP_UNAUTHORIZED,
-                BigMLConstants::HTTP_PAYMENT_REQUIRED,
-                BigMLConstants::HTTP_NOT_FOUND].include? code
+                BigML::HTTP_BAD_REQUEST,
+                BigML::HTTP_UNAUTHORIZED,
+                BigML::HTTP_PAYMENT_REQUIRED,
+                BigML::HTTP_NOT_FOUND].include? code
                 error = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
             else
                 @logger.error("Unexpected error (#{code})")
-                code = BigMLConstants::HTTP_INTERNAL_SERVER_ERROR
+                code = BigML::HTTP_INTERNAL_SERVER_ERROR
             end
 
         rescue RestClient::ServerBrokeConnection
@@ -110,28 +111,28 @@ class BigML
     def _get(url)
         #Retrieve a resource
         
-        code = BigMLConstants::HTTP_INTERNAL_SERVER_ERROR
+        code = BigML::HTTP_INTERNAL_SERVER_ERROR
         resource_id = nil
         location = url
         resource = nil
         error = {
             :status => {
-                :code => BigMLConstants::HTTP_INTERNAL_SERVER_ERROR,
+                :code => BigML::HTTP_INTERNAL_SERVER_ERROR,
                 :message => "The resource couldn't be retrieved"}}
 
         begin
-            response = RestClient.get url + @auth, BigMLConstants::ACCEPT_JSON
+            response = RestClient.get url + @auth, BigML::ACCEPT_JSON
             code = response.code
 
-            if code == BigMLConstants::HTTP_OK
+            if code == BigML::HTTP_OK
                 resource = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
                 resource_id = resource[:resource]
                 error = nil
-            elsif [BigMLConstants::HTTP_BAD_REQUEST, BigMLConstants::HTTP_UNAUTHORIZED, BigMLConstants::HTTP_NOT_FOUND].include? code
+            elsif [BigML::HTTP_BAD_REQUEST, BigML::HTTP_UNAUTHORIZED, BigML::HTTP_NOT_FOUND].include? code
                 error = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
             else
                 @logger.error("Unexpected error (#{code})")
-                code = BigMLConstants::HTTP_INTERNAL_SERVER_ERROR
+                code = BigML::HTTP_INTERNAL_SERVER_ERROR
             end
 
         rescue RestClient::ServerBrokeConnection
@@ -157,7 +158,7 @@ class BigML
     def _list(url, query_string='')
         #List resources
         
-        code = BigMLConstants::HTTP_INTERNAL_SERVER_ERROR
+        code = BigML::HTTP_INTERNAL_SERVER_ERROR
         meta = nil
         resources = nil
         error = {
@@ -165,19 +166,19 @@ class BigML
                 :code => code,
                 :message => "The resource couldn't be listed"}}
         begin
-            response = RestClient.get url + @auth + query_string, BigMLConstants::ACCEPT_JSON
+            response = RestClient.get url + @auth + query_string, BigML::ACCEPT_JSON
             code = response.code
 
-            if code == BigMLConstants::HTTP_OK
+            if code == BigML::HTTP_OK
                 resource = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
                 meta = resource[:meta]
                 resources = resource[:objects]
                 error = None
-            elsif [BigMLConstants::HTTP_BAD_REQUEST, BigMLConstants::HTTP_UNAUTHORIZED, BigMLConstants::HTTP_NOT_FOUND].include? code
+            elsif [BigML::HTTP_BAD_REQUEST, BigML::HTTP_UNAUTHORIZED, BigML::HTTP_NOT_FOUND].include? code
                 error = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
             else
                 @logger.error("Unexpected error (#{code})")
-                code = BigMLConstants::HTTP_INTERNAL_SERVER_ERROR
+                code = BigML::HTTP_INTERNAL_SERVER_ERROR
             end
 
         rescue RestClient::ServerBrokeConnection
@@ -201,7 +202,7 @@ class BigML
     def _update(url, body)
         #Update a resource
         
-        code = BigMLConstants::HTTP_INTERNAL_SERVER_ERROR
+        code = BigML::HTTP_INTERNAL_SERVER_ERROR
         resource_id = nil
         location = url
         resource = nil
@@ -211,19 +212,19 @@ class BigML
                 :message => "The resource couldn't be updated"}}
 
         begin
-            response = RestClient.put url + @auth, body, BigMLConstants::SEND_JSON   
+            response = RestClient.put url + @auth, body, BigML::SEND_JSON   
 
             code = response.code
 
-            if code == BigMLConstants::HTTP_ACCEPTED:
+            if code == BigML::HTTP_ACCEPTED:
                 location = response.headers[:location]
                 resource = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
                 resource_id = resource[:resource]
                 error = nil
             elsif [
-                BigMLConstants::HTTP_UNAUTHORIZED,
-                BigMLConstants::HTTP_PAYMENT_REQUIRED,
-                BigMLConstants::HTTP_METHOD_NOT_ALLOWED].include? code
+                BigML::HTTP_UNAUTHORIZED,
+                BigML::HTTP_PAYMENT_REQUIRED,
+                BigML::HTTP_METHOD_NOT_ALLOWED].include? code
                 error = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
             else
                 @logger.error("Unexpected error (#{code})")
@@ -251,7 +252,7 @@ class BigML
     def _delete(url)
         #Delete a resource
         
-        code = BigMLConstants::HTTP_INTERNAL_SERVER_ERROR
+        code = BigML::HTTP_INTERNAL_SERVER_ERROR
         error = {
             :status => {
                 :code => code,
@@ -262,13 +263,13 @@ class BigML
 
             code = response.code
 
-            if code == BigMLConstants::HTTP_NO_CONTENT:
+            if code == BigML::HTTP_NO_CONTENT:
                 error = nil
-            elsif [BigMLConstants::HTTP_BAD_REQUEST, BigMLConstants::HTTP_UNAUTHORIZED, BigMLConstants::HTTP_NOT_FOUND].include? code
+            elsif [BigML::HTTP_BAD_REQUEST, BigML::HTTP_UNAUTHORIZED, BigML::HTTP_NOT_FOUND].include? code
                 error = JSON.parse(response.body, :symbolize_names => true) # TODO: force_encoding to utf-8
             else
                 @logger.error("Unexpected error (#{code})")
-                code = BigMLConstants::HTTP_INTERNAL_SERVER_ERROR
+                code = BigML::HTTP_INTERNAL_SERVER_ERROR
             end
 
 
@@ -306,7 +307,7 @@ class BigML
         if type.nil?
             types = ['source', 'dataset', 'model', 'prediction']
             types.each { |vtype| 
-                if eval("BigMLConstants::"+vtype.upcase+"_RE").match(object_id)
+                if eval("BigML::"+vtype.upcase+"_RE").match(object_id)
                     type = vtype
                 end
                 }
@@ -314,7 +315,7 @@ class BigML
                 @logger.error("Wrong id format")
                 return false
             end
-        elsif not eval("BigMLConstants::"+type.to_s.upcase+"_RE").match(object_id)
+        elsif not eval("BigML::"+type.to_s.upcase+"_RE").match(object_id)
             @logger.error("Wrong "+type.to_s+" id")
             return false
         end
@@ -328,10 +329,10 @@ class BigML
             return false
         end
 
-        object = _get("#{BigMLConstants::BIGML_URL}#{object_id}")
+        object = _get("#{BigML::BIGML_URL}#{object_id}")
 
-        return (object[:code] == BigMLConstants::HTTP_OK and
-            object[:object][:status][:code] == BigMLConstants::FINISHED)
+        return (object[:code] == BigML::HTTP_OK and
+            object[:object][:status][:code] == BigML::FINISHED)
     end
 
     def _get_fields(resource)
@@ -340,9 +341,9 @@ class BigML
             return false
         end
 
-        resource = _get("%s%s" % [BigMLConstants::BIGML_URL, resource_id])
-        if resource[:code] == BigMLConstants::HTTP_OK
-            if  BigMLConstants::MODEL_RE.match(resource_id)
+        resource = _get("%s%s" % [BigML::BIGML_URL, resource_id])
+        if resource[:code] == BigML::HTTP_OK
+            if  BigML::MODEL_RE.match(resource_id)
                 return resource[:object][:model][:fields]
             else
                 return resource[:object][:fields]

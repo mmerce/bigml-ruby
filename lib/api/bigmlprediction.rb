@@ -65,7 +65,7 @@ class BigMLPrediction
                 :input_data => new_input_data})
 
             body = args.to_json
-            return @@bigml._create(BigMLConstants::PREDICTION_URL, body)
+            return @@bigml._create(BigML::PREDICTION_URL, body)
         end
 
         def get(prediction)
@@ -74,12 +74,12 @@ class BigMLPrediction
                 return
             end
 
-            return @@bigml._get("%s%s" % [BigMLConstants::BIGML_URL, prediction_id])
+            return @@bigml._get("%s%s" % [BigML::BIGML_URL, prediction_id])
         end
 
         def list(query_string='')
             # List all your predictions.
-            return @@bigml._list(BigMLConstants::PREDICTION_URL, query_string)
+            return @@bigml._list(BigML::PREDICTION_URL, query_string)
         end
 
         def update(prediction, changes)
@@ -89,7 +89,7 @@ class BigMLPrediction
             end
 
             body = changes.to_json
-            return @@bigml._update("%s%s" % [BigMLConstants::BIGML_URL, prediction_id], body)
+            return @@bigml._update("%s%s" % [BigML::BIGML_URL, prediction_id], body)
         end
 
         def delete(prediction)
@@ -99,7 +99,7 @@ class BigMLPrediction
             end
 
             return @@bigml._delete("%s%s" %
-                [BigMLConstants::BIGML_URL, prediction_id])
+                [BigML::BIGML_URL, prediction_id])
         end
     end
 end

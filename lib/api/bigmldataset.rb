@@ -47,7 +47,7 @@ class BigMLDataset
             args.update({
                 :source => source_id})
             body = args.to_json
-            return @@bigml._create(BigMLConstants::DATASET_URL, body)
+            return @@bigml._create(BigML::DATASET_URL, body)
         end
 
         def get(dataset)
@@ -56,12 +56,12 @@ class BigMLDataset
                 return
             end
 
-            return @@bigml._get("%s%s" % [BigMLConstants::BIGML_URL, dataset_id])
+            return @@bigml._get("%s%s" % [BigML::BIGML_URL, dataset_id])
         end
 
         def list(query_string='')
             # List all your datasets.
-            return @@bigml._list(BigMLConstants::DATASET_URL, query_string)
+            return @@bigml._list(BigML::DATASET_URL, query_string)
         end
 
         def update(dataset, changes)
@@ -71,7 +71,7 @@ class BigMLDataset
             end
 
             body = changes.to_json
-            return @@bigml._update("%s%s" % [BigMLConstants::BIGML_URL, dataset_id], body)
+            return @@bigml._update("%s%s" % [BigML::BIGML_URL, dataset_id], body)
         end
 
         def delete(dataset)
@@ -80,7 +80,7 @@ class BigMLDataset
                 return
             end
 
-            return @@bigml._delete("%s%s" % [BigMLConstants::BIGML_URL, dataset_id])
+            return @@bigml._delete("%s%s" % [BigML::BIGML_URL, dataset_id])
         end
 
         def get_fields(dataset)
