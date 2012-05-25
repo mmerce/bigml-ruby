@@ -32,6 +32,7 @@ Build your own gem
 $ gem build bigml.gemspec
 ```
 and install the bindings
+
 ```bash
 $ gem install bigml-0.0.1.gem
 ```
@@ -288,7 +289,7 @@ Newly-created resources are returned in a dictionary with the
 following keys:
 
 * **code**: If the request is successful you will get a
-    `bigml.api.HTTP_CREATED` (201) status code. Otherwise, it will be
+    `BigML::HTTP_CREATED` (201) status code. Otherwise, it will be
     one of the standard HTTP error codes
     [detailed in the documentation](https://bigml.com/developers/status_codes).
 * **resource**: The identifier of the new resource.
@@ -296,7 +297,7 @@ following keys:
 * **object**: The resource itself, as computed by BigML.
 * **error**: If an error occurs and the resource cannot be created, it
     will contain an additional code and a description of the error. In
-    this case, **location**, and **resource** will be `None`.
+    this case, **location**, and **resource** will be `nil`.
 
 ### Statuses
 
@@ -306,21 +307,21 @@ you create a new source, a new dataset or a new model, even if you
 receive an immediate response from the BigML servers, the full
 creation of the resource can take from a few seconds to a few days,
 depending on the size of the resource and BigML's load. A resource is
-not fully created until its status is `BigMLConstants::FINISHED`. See the
+not fully created until its status is `BigML::FINISHED`. See the
 [documentation on status codes](https://bigml.com/developers/status_codes)
 for the listing of potential states and their semantics.  So depending
 on your application you might need to use the following constants.
 
 ```ruby
-BigMLConstants::WAITING
-BigMLConstants::QUEUED
-BigMLConstants::STARTED
-BigMLConstants::IN_PROGRESS
-BigMLConstants::SUMMARIZED
-BigMLConstants::FINISHED
-BigMLConstants::FAULTY
-BigMLConstants::UNKNOWN
-BigMLConstants::RUNNABLE
+BigML::WAITING
+BigML::QUEUED
+BigML::STARTED
+BigML::IN_PROGRESS
+BigML::SUMMARIZED
+BigML::FINISHED
+BigML::FAULTY
+BigML::UNKNOWN
+BigML::RUNNABLE
 ```
 
 
