@@ -26,6 +26,56 @@ require 'bigml'
 class BigMLSource 
 
     @@bigml = BigML.instance
+    @resource_id = nil
+
+    def initialize(params)
+        #Initialize source instance.
+        if source = params[:source] and not source.nil? and source_id = @@bigml._check_resource_id(source, :source)
+            @resource_id = source_id
+        end
+        if file = params[:file] and not file.nil?
+            source = BigMLSource.create(file, args=nil)
+            @resource_id = source[:resource]
+        end
+        if @resource_id.nil?
+            raise("Either a file name or a source_id is required.")
+        end
+    end
+
+    def get
+        if @resource_id.nil?
+            return 
+        end
+        return BigMLSource.get(@resource_id)
+    end
+
+    def update(changes)
+        if @resource_id.nil?
+            return 
+        end
+        return BigMLSource.update(@resource_id, changes)
+    end
+
+    def delete
+        if @resource_id.nil?
+            return 
+        end
+        return BigMLSource.delete(@resource_id)
+    end
+
+    def get_fields
+        if @resource_id.nil?
+            return 
+        end
+        return BigMLSource.get_fields(@resource_id)
+    end
+
+    def status
+        if @resource_id.nil?
+            return 
+        end
+        return BigMLSource.status(@resource_id)
+    end
 
     class << self
 
