@@ -2,6 +2,7 @@
 #!/usr/bin/env ruby
 
 module BigMLConstants
+
     # Base URL
     BIGML_URL = "https://bigml.io/andromeda/"
 

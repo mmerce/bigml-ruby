@@ -20,7 +20,9 @@ in our [Campfire chatroom](https://bigmlinc.campfirenow.com/f20a0)
 ## Requirements
 
 The only mandatory dependencies are the
-[json](http://rubygems.org/gems/json) and [rest-client] (http://rubygems.org/gems/rest-client) gems that can be installed via rubygems. 
+[json](http://rubygems.org/gems/json) and 
+[rest-client] (http://rubygems.org/gems/rest-client) gems that can be installed
+ via rubygems. 
 
 ## Installation
 
@@ -68,25 +70,24 @@ by instantiating the BigML class as follows.
 
 
 ```ruby
-connection = BigML.instance.authenticate('myusername','ae579e7e53fb9abd646a6ff8aa99d4afe83ac291')
+connection = BigML.instance.authenticate('myusername',
+                   'ae579e7e53fb9abd646a6ff8aa99d4afe83ac291')
 ```
 
 ## Running the Tests
 
-To run the tests you will need to install:
-[cucumber](http://rubygems.org/gems/cucumber) and [test-unit](http://rubygems.org/gems/test-unit) gems.
+To run the tests you just have to run
 
 ```bash
-$ gem install cucumber
-$ gem install test-unit
+$ bundle install
 ```
-
-and set up your authentication via environment variables, as explained
-above.  With that in place, you can run the test suite simply by:
+to check for dependencies.
+You also will need to set up your authentication via environment variables, 
+as explained above.  With that in place, you can run the test suite simply by:
 
 ```bash
 $ cd tests
-$ cucumber
+$ bundle exec cucumber
 ```
 
 ## Quick Start
@@ -125,7 +126,8 @@ require 'bigml'
 source = BigMLSource.create('./data/iris.csv')
 dataset = BigMLDataset.create(source)
 model = BigMLModel.create(dataset)
-prediction = BigMLPrediction.create(model, {'sepal length' => 5, 'sepal width' => 2.5})
+prediction = BigMLPrediction.create(model, {'sepal length' => 5, 
+                                            'sepal width' => 2.5})
 ```
 
 ## Fields
@@ -396,7 +398,9 @@ invocation:
 
 ```ruby
 model = BigMLModel.create(dataset, {
-    :name => "my model", :input_fields => ["000000", "000001"], :range => [1, 10]})
+    :name => "my model", 
+    :input_fields => ["000000", "000001"], 
+    :range => [1, 10]})
 ```
 
 Again, the model is scheduled for creation, and you can retrieve its
@@ -559,21 +563,6 @@ if not list.nil?
   predictions = list.map{ |prediction| prediction[:name] }
 end
 ```
-
-
-
-
-
-
-
----------------------- TODO: change from python to ruby ------------------
-
-
-
-
-
-
-
 ## Updating Resources
 
 When you update a resource, it is returned in a dictionary exactly
