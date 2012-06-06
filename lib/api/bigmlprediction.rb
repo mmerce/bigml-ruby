@@ -27,7 +27,44 @@ require 'bigml'
 class BigMLPrediction
 
     @@bigml = BigML.instance
+    @resource_id = nil
 
+    def initialize(params)
+        #Initialize model instance.
+        if prediction = params[:prediction] and not prediction.nil? and prediction_id = @@bigml._check_resource_id(prediction, :prediction)
+            @resource_id = prediction_id
+        end
+        if model = params[:model] and not model.nil?
+            input_data = params[:input_data]
+            args = params[:args]
+            wait_time = params[:wait_time]
+            model = BigMLPrediction.create(model, input_data, args, wait_time)
+            @resource_id = prediction[:resource]
+        end
+        if @resource_id.nil?
+            raise("Either a dataset or a model_id is required.")
+        end
+    end
+
+    def get_id
+        return @resource_id
+    end
+
+    def get
+        return BigMLPrediction.get(@resource_id) if not @resource_id.nil?
+    end
+
+    def update(changes)
+        return BigMLPrediction.update(@resource_id, changes) if not @resource_id.nil?
+    end
+
+    def delete
+        return BigMLPrediction.delete(@resource_id) if not @resource_id.nil?
+    end
+
+    def status
+        return BigMLPrediction.status(@resource_id) if not @resource_id.nil?
+    end
     class << self
 
         def create(model, input_data=nil, args=nil,

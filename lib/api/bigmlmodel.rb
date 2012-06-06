@@ -27,6 +27,43 @@ require 'bigml'
 class BigMLModel
 
     @@bigml = BigML.instance
+    @resource_id = nil
+
+    def initialize(params)
+        #Initialize model instance.
+        if model = params[:model] and not model.nil? and model_id = @@bigml._check_resource_id(model, :model)
+            @resource_id = model_id
+        end
+        if dataset = params[:dataset] and not dataset.nil?
+            args = params[:args]
+            wait_time = params[:wait_time]
+            model = BigMLModel.create(dataset, args, wait_time)
+            @resource_id = model[:resource]
+        end
+        if @resource_id.nil?
+            raise("Either a dataset or a model_id is required.")
+        end
+    end
+
+    def get_id
+        return @resource_id
+    end
+
+    def get
+        return BigMLModel.get(@resource_id) if not @resource_id.nil?
+    end
+
+    def update(changes)
+        return BigMLModel.update(@resource_id, changes) if not @resource_id.nil?
+    end
+
+    def delete
+        return BigMLModel.delete(@resource_id) if not @resource_id.nil?
+    end
+
+    def status
+        return BigMLModel.status(@resource_id) if not @resource_id.nil?
+    end
 
     class << self
 

@@ -34,7 +34,8 @@ class BigMLSource
             @resource_id = source_id
         end
         if file = params[:file] and not file.nil?
-            source = BigMLSource.create(file, args=nil)
+            args = params[:args]
+            source = BigMLSource.create(file, args)
             @resource_id = source[:resource]
         end
         if @resource_id.nil?
@@ -42,39 +43,28 @@ class BigMLSource
         end
     end
 
+    def get_id
+        return @resource_id
+    end
+
     def get
-        if @resource_id.nil?
-            return 
-        end
-        return BigMLSource.get(@resource_id)
+        return BigMLSource.get(@resource_id) if not @resource_id.nil?
     end
 
     def update(changes)
-        if @resource_id.nil?
-            return 
-        end
-        return BigMLSource.update(@resource_id, changes)
+        return BigMLSource.update(@resource_id, changes) if not @resource_id.nil?
     end
 
     def delete
-        if @resource_id.nil?
-            return 
-        end
-        return BigMLSource.delete(@resource_id)
+        return BigMLSource.delete(@resource_id) if not @resource_id.nil?
     end
 
     def get_fields
-        if @resource_id.nil?
-            return 
-        end
-        return BigMLSource.get_fields(@resource_id)
+       return BigMLSource.get_fields(@resource_id) if not @resource_id.nil?
     end
 
     def status
-        if @resource_id.nil?
-            return 
-        end
-        return BigMLSource.status(@resource_id)
+        return BigMLSource.status(@resource_id) if not @resource_id.nil?
     end
 
     class << self
