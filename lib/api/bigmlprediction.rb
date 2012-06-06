@@ -38,7 +38,7 @@ class BigMLPrediction
             input_data = params[:input_data]
             args = params[:args]
             wait_time = params[:wait_time]
-            model = BigMLPrediction.create(model, input_data, args, wait_time)
+            prediction = BigMLPrediction.create(model, input_data, args, wait_time)
             @resource_id = prediction[:resource]
         end
         if @resource_id.nil?
@@ -74,9 +74,10 @@ class BigMLPrediction
                 return
             end
 
+            wait_time = 3 if wait_time.nil?
             if wait_time > 0
                 until @@bigml._is_ready?(model_id, :model)
-                    time.sleep(wait_time)
+                    sleep(wait_time)
                 end
             end
 

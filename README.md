@@ -21,8 +21,8 @@ in our [Campfire chatroom](https://bigmlinc.campfirenow.com/f20a0)
 
 The only mandatory dependencies are the
 [json](http://rubygems.org/gems/json) and 
-[rest-client] (http://rubygems.org/gems/rest-client) gems that can be installed
- via rubygems. 
+[rest-client] (http://rubygems.org/gems/rest-client) gems. Installation of bigml 
+gem checks its existence on your system and installs them also when needed.
 
 ## Installation
 
@@ -65,7 +65,7 @@ export BIGML_API_KEY=ae579e7e53fb9abd646a6ff8aa99d4afe83ac291
 ```
 
 With that environment set up, connection to BigML will be automatically 
-initialized when needed. Otherwise, you can autenticate explicitly
+initialized when needed. Otherwise, you can set your autentication explicitly
 by instantiating the BigML class as follows.
 
 
@@ -76,12 +76,12 @@ connection = BigML.instance.authenticate('myusername',
 
 ## Running the Tests
 
-To run the tests you just have to run
+To run the tests you just have to
 
 ```bash
 $ bundle install
 ```
-to check for dependencies.
+which checks for dependencies.
 You also will need to set up your authentication via environment variables, 
 as explained above.  With that in place, you can run the test suite simply by:
 
@@ -129,6 +129,21 @@ model = BigMLModel.create(dataset)
 prediction = BigMLPrediction.create(model, {'sepal length' => 5, 
                                             'sepal width' => 2.5})
 ```
+where the static methods return the object properties in a hash format, 
+or you might as well instantiate source, dataset, model and prediction objects 
+for further use
+
+```ruby
+require 'rubygems'
+require 'bigml'
+
+source = BigMLSource.new(:file => './data/iris.csv')
+dataset = BigMLDataset.new(:source => source.get_id)
+model = BigMLModel.new(:dataset => dataset.get_id)
+prediction = BigMLPrediction.new(:model => model.get_id, 
+                                 :input_data => {'sepal length' => 5, 
+                                                 'sepal width' => 2.5})
+```
 
 ## Fields
 
@@ -143,6 +158,16 @@ require 'pp'
 
 source = BigMLSource.create('./data/iris.csv')
 pp BigMLSource.get_fields(source)
+```
+or using objects' syntax
+
+```ruby
+require 'rubygems'
+require 'bigml'
+require 'pp'
+
+source = BigMLSource.new(:file => './data/iris.csv')
+pp source.get_fields
 ```
 
 and you'll get:
@@ -164,6 +189,12 @@ retrieve the `fields` from the dataset as follows:
 ```ruby
 dataset = BigMLDataset.get(dataset)
 pp BigMLDataset.get_fields(dataset)
+```
+
+or using instantiated objects
+```ruby
+dataset = BigMLDataset.new(:dataset => 'dataset/4fcfd1a515526871bb00008c')
+pp dataset.get_fields
 ```
 
 You will get a dictionary keyed by field id:
@@ -252,6 +283,13 @@ model = BigMLModel.get(model)
 pp model[:object][:model][:root]
 ```
 
+or using objects
+
+```ruby
+model = BigMLModel.new(:model => 'model/4fcfd178035d0742cc000087')
+pp model.get[:object][:model][:root]
+```
+
 You will get a explicit tree-like predictive model:
 
 ```ruby
@@ -335,6 +373,15 @@ BigMLModel.status(model)
 BigMLPrediction.status(prediction)
 ```
 
+or using objects' status method
+```ruby
+source.status
+dataset.status
+model.status
+prediction.status
+```
+
+
 Before invoking the creation of a new resource, the library checks
 that the status of the resource that is passed as a parameter is
 `FINISHED`. You can change how often the status will be checked with
@@ -343,7 +390,7 @@ the `wait_time` argument. By default, it is set to 3 seconds.
 ### Creating sources
 
 To create a source from a local data file, you can use the
-`create_source` method. The only required parameter is the path to the
+`create` method. The only required parameter is the path to the
 data file. You can use a second optional parameter to specify any of
 the options for source creation described in the
 [BigML API documentation](https://bigml.com/developers/sources).
@@ -368,6 +415,29 @@ method. For example, to get the status of our source we would use:
 BigMLSource.status(source)
 ```
 
+You can also achieve the same results by instantiating a new BigMLSource object. 
+It's constructor accepts as possible parameters :file, :source and :args. :file
+must contain the file name, :args is the optional hash with options for source creation and 
+:source should be the source id string for a previously created source. 
+
+In this case, the invocation would be as follows:
+
+```ruby
+
+require 'rubygems'
+require 'bigml'
+
+source = BigMLSource.new(:file => './data/iris.csv',
+    :args => {:name => 'my source', :source_parser => {:missing_tokens => ['?']}})
+```
+
+and to check it's status we could use
+
+```ruby
+source.status
+```
+
+ 
 ### Creating datasets
 
 Once you have created a source, you can create a dataset. The only
@@ -384,6 +454,20 @@ dataset = BigMLDataset.create(source, {:name => "my dataset", :size => 1024})
 
 Upon success, the dataset creation job will be queued for execution,
 and you can follow its evolution using `BigMLDataset.status(dataset)`.
+
+Again, you could also define a new dataset object. The constructor's valid 
+parameters are :dataset, :source, :args and :wait_time. :dataset is the string 
+used as dataset id for a previously existing dataset. The rest of parameters 
+are used when creating a new dataset, where :source should be the string used as 
+source id, :args the optional arguments and :wait_time the lapse of time used
+in the create process when waiting for the source.status to be FINISHED. Then, 
+the previous example would read:
+
+```ruby
+dataset = BigMLDataset.new(:source => source.get_id, 
+                           :args => {:name => "my dataset", :size => 1024})
+```
+and it's status would be obtained by asking for `dataset.status`.
 
 ### Creating models
 
@@ -406,10 +490,26 @@ model = BigMLModel.create(dataset, {
 Again, the model is scheduled for creation, and you can retrieve its
 status at any time by means of `BigMLModel.status(model)` .
 
+You might also use the constructor, whose valid parameters are :model, :dataset, 
+:args and :wait_time. As in the dataset case, :model should be a previously created
+model id string, and creating a new one would need :dataset as a dataset string id, 
+and optionally :args for the options hash and :wait_time as the lapse of time to 
+use when waiting for dataset.status to be FINISHED. Then the previous example 
+would be:
+
+```ruby
+model = BigMLModel.new(:dataset => dataset.get_id, :args => {
+    :name => "my model", 
+    :input_fields => ["000000", "000001"], 
+    :range => [1, 10]})
+```
+
+and it's status could be checked by using `model.status`.
+
 ### Creating predictions
 
 You can now use the model resource identifier together with some input
-parameters to ask for predictions, using the `create_prediction`
+parameters to ask for predictions, using the `create`
 method. You can also give the prediction a name.
 
 ```ruby
@@ -425,6 +525,25 @@ To see the prediction you can use `pp`:
 pp prediction
 ```
 
+And to use object instantiation, the valid parameters for the prediction
+constructor are :prediction, :model, :input_data, :args and :wait_time. :prediction should
+be a previously existing prediction id string, and the rest of them are used
+when creating a new prediction. :model should be an existing model id string, 
+:input_data the fixed {field => value} set on which you want to predict,
+:args the optional arguments and :wait_time (optional too) the lapse of time used when waiting 
+for the model status to be FINISHED. Then, prediction creation would read:
+
+```ruby
+prediction = BigMLPrediction.new(:model => model.get_id,
+                                 :input_data => {'sepal length' => 5,
+                                           'sepal width' => 2.5},
+                                 :args => {:name => "my prediction"})
+```
+To see the prediction you can use `pp`:
+
+```ruby
+pp prediction.get
+```
 ## Reading Resources
 
 When retrieved individually, resources are returned as a dictionary
@@ -577,6 +696,15 @@ BigMLModel.update(model, {:name => "new name"})
 BigMLPrediction.update(prediction, {:name => "new name"})
 ```
 
+or if using instances
+
+```ruby
+source.update({:name => "new name"})
+dataset.update({:name => "new name"})
+model.update({:name => "new name"})
+prediction.update({:name => "new name"})
+```
+
 ## Deleting Resources
 
 Resources can be deleted individually using the corresponding method
@@ -587,6 +715,15 @@ BigMLSource.delete(source)
 BigMLDataset.delete(dataset)
 BigMLModel.delete(model)
 BigMLPrediction.delete(prediction)
+```
+
+or if using instances
+
+```ruby
+source.delete
+dataset.delete
+model.delete
+prediction.delete
 ```
 
 Each of the calls above will return a dictionary with the following

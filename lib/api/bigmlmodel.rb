@@ -73,9 +73,10 @@ class BigMLModel
                 return
             end
 
+            wait_time = 3 if wait_time.nil?
             if wait_time > 0
                 until @@bigml._is_ready?(dataset_id, :dataset)
-                    time.sleep(wait_time)
+                    sleep(wait_time)
                 end
             end
 
