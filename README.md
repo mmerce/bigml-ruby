@@ -572,9 +572,9 @@ you will receive a dictionary with the following keys:
     for more info.
 * **meta**: A dictionary including the following keys that can help
   you paginate listings:
-    * **previous**: Path to get the previous page or `None` if there is
+    * **previous**: Path to get the previous page or `nil` if there is
         no previous page.
-    * **next**: Path to get the next page or `None` if there is no next
+    * **next**: Path to get the next page or `nil` if there is no next
         page.
     * **offset**: How far off from the first entry in the resources is
         the first one listed in the resources key.
@@ -584,7 +584,7 @@ you will receive a dictionary with the following keys:
 * **objects**: A list of resources as returned by BigML.
 * **error**: If an error occurs and the resource cannot be created, it
     will contain an additional code and a description of the error. In
-    this case, **meta**, and **resources** will be `None`.
+    this case, **meta**, and **resources** will be `nil`.
 
 ### Filtering Resources
 
