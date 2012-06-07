@@ -46,7 +46,6 @@ require 'rubygems'
 require 'bigml'
 ```
 
-```
 ## Authentication
 
 All the requests to BigML.io must be authenticated using your username
@@ -65,7 +64,7 @@ export BIGML_API_KEY=ae579e7e53fb9abd646a6ff8aa99d4afe83ac291
 ```
 
 With that environment set up, connection to BigML will be automatically 
-initialized when needed. Otherwise, you can set your autentication explicitly
+initialized when needed. Otherwise, you can set your authentication explicitly
 by instantiating the BigML class as follows.
 
 
@@ -131,7 +130,9 @@ prediction = BigMLPrediction.create_resource(model, {'sepal length' => 5,
 ```
 where the static methods return the object properties in a hash format. Either
 the hash or the resource id can be used as the parameter for the next `create_resource` 
-call. You might as well instantiate source, dataset, model and prediction objects 
+call. 
+
+You might as well instantiate source, dataset, model and prediction objects 
 for further use
 
 ```ruby
@@ -145,7 +146,7 @@ prediction = BigMLPrediction.create(model, {'sepal length' => 5,
                                             'sepal width' => 2.5})
 ```
 In this case, as you see, the source object itself can also be used as input for the next 
-`BigMLDataset.create` call, but you might as well use the previously discussed 
+`BigMLDataset.create` call, but you might also use the previously discussed 
 properties hash or the resource id.
 
 ## Fields
@@ -394,7 +395,7 @@ the `wait_time` argument. By default, it is set to 3 seconds.
 ### Creating sources
 
 To create a source from a local data file, you can use the
-`create_request` method. The only required parameter is the path to the
+`create_resource` method. The only required parameter is the path to the
 data file. You can use a second optional parameter to specify any of
 the options for source creation described in the
 [BigML API documentation](https://bigml.com/developers/sources).
