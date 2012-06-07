@@ -29,45 +29,53 @@ class BigMLPrediction
     @@bigml = BigML.instance
     @resource_id = nil
 
-    def initialize(params)
-        #Initialize model instance.
-        if prediction = params[:prediction] and not prediction.nil? and prediction_id = @@bigml._check_resource_id(prediction, :prediction)
+    def initialize(prediction)
+        #Initialize prediction instance.
+        raise("A prediction id string is required to instantiate BigMLPrediction object") if prediction.nil?
+        prediction = prediction.get_id if prediction.is_a? BigMLPrediction
+        if prediction_id = @@bigml._check_resource_id(prediction, :prediction)
             @resource_id = prediction_id
-        end
-        if model = params[:model] and not model.nil?
-            input_data = params[:input_data]
-            args = params[:args]
-            wait_time = params[:wait_time]
-            prediction = BigMLPrediction.create(model, input_data, args, wait_time)
-            @resource_id = prediction[:resource]
-        end
-        if @resource_id.nil?
-            raise("Either a dataset or a model_id is required.")
+        else 
+            raise("A valid prediction id string is required to instantiate BigMLPrediction object")
         end
     end
 
     def get_id
+        # get prediction's id
         return @resource_id
     end
 
     def get
+        # get prediction's info
         return BigMLPrediction.get(@resource_id) if not @resource_id.nil?
     end
 
     def update(changes)
+        # update prediction's properties
         return BigMLPrediction.update(@resource_id, changes) if not @resource_id.nil?
     end
 
     def delete
+        # delete prediction
         return BigMLPrediction.delete(@resource_id) if not @resource_id.nil?
     end
 
     def status
+        # get prediction's status
         return BigMLPrediction.status(@resource_id) if not @resource_id.nil?
     end
+
     class << self
 
-        def create(model, input_data=nil, args=nil,
+        def create(model, input_data=nil, args=nil, wait_time=3)
+            # create a new model and instantiate the corresponding object
+            model = model.get_id if model.is_a? BigMLModel
+            prediction = BigMLPrediction.create_resource(model, input_data, args, wait_time)
+            raise("Prediction could not be created. Please make sure you are providing a valid model id.") if prediction.nil?
+            return BigMLPrediction.new(prediction[:resource])
+        end
+
+        def create_resource(model, input_data=nil, args=nil,
                 wait_time=3)
             # Create a new prediction.
             if not model_id = @@bigml._check_resource_id(model, :model)

@@ -1,6 +1,6 @@
 
 Given /I create a data source uploading a "(.*)" file$/ do |file|
-    @source = BigMLSource.create(file)
+    @source = BigMLSource.create_resource(file)
 end
 
 And /I wait until the (source|dataset|model|prediction) is ready less than (\d+)/ do |object, secs|
@@ -19,16 +19,16 @@ end
 
 And /I create a dataset$/ do
 
-    @dataset = BigMLDataset.create(@source[:resource])
+    @dataset = BigMLDataset.create_resource(@source[:resource])
 end
 
 And /I create a model$/ do
 
-    @model = BigMLModel.create(@dataset[:resource])
+    @model = BigMLModel.create_resource(@dataset[:resource])
 end
 
 And /I create a prediction for "(.*)"/ do |data|
-    @prediction = BigMLPrediction.create(@model[:resource], eval(data))
+    @prediction = BigMLPrediction.create_resource(@model[:resource], eval(data))
 end
 
 Then /the prediction for "(.*)" is "(.*)"/ do |objective, prediction|

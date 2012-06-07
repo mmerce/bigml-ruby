@@ -29,45 +29,53 @@ class BigMLModel
     @@bigml = BigML.instance
     @resource_id = nil
 
-    def initialize(params)
+    def initialize(model)
         #Initialize model instance.
-        if model = params[:model] and not model.nil? and model_id = @@bigml._check_resource_id(model, :model)
+        raise("A model id string is required to instantiate BigMLModel object") if model.nil?
+        model = model.get_id if model.is_a? BigMLModel
+        if model_id = @@bigml._check_resource_id(model, :model)
             @resource_id = model_id
-        end
-        if dataset = params[:dataset] and not dataset.nil?
-            args = params[:args]
-            wait_time = params[:wait_time]
-            model = BigMLModel.create(dataset, args, wait_time)
-            @resource_id = model[:resource]
-        end
-        if @resource_id.nil?
-            raise("Either a dataset or a model_id is required.")
+        else 
+            raise("A valid model id string is required to instantiate BigMLModel object")
         end
     end
 
     def get_id
+        # get model's id
         return @resource_id
     end
 
     def get
+        # get model's info
         return BigMLModel.get(@resource_id) if not @resource_id.nil?
     end
 
     def update(changes)
+        # update model's properties
         return BigMLModel.update(@resource_id, changes) if not @resource_id.nil?
     end
 
     def delete
+        # delete model
         return BigMLModel.delete(@resource_id) if not @resource_id.nil?
     end
 
     def status
+        # get model's status
         return BigMLModel.status(@resource_id) if not @resource_id.nil?
     end
 
     class << self
 
         def create(dataset, args=nil, wait_time=3)
+            # create a new dataset and instantiate the corresponding object
+            dataset = dataset.get_id if dataset.is_a? BigMLDataset
+            model = BigMLModel.create_resource(dataset, args, wait_time)
+            raise("Model could not be created. Please make sure you are providing a valid dataset id.") if model.nil?
+            return BigMLModel.new(model[:resource])
+        end
+
+        def create_resource(dataset, args=nil, wait_time=3)
             # Create a model.
             if not dataset_id = @@bigml._check_resource_id(dataset, :dataset)
                 return

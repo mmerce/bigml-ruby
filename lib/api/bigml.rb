@@ -93,6 +93,8 @@ class BigML
             @logger.error("Connection error")
         rescue RestClient::RequestTimeout
             @logger.error("Request timed out")
+        rescue JSON::ParserError
+            @logger.error("Invalid json #{response.body}")
         rescue ArgumentError
             @logger.error("Ambiguous exception occurred")
         rescue StandardError
@@ -139,6 +141,8 @@ class BigML
             @logger.error("Connection error")
         rescue RestClient::RequestTimeout
             @logger.error("Request timed out")
+        rescue JSON::ParserError
+            @logger.error("Invalid json #{response.body}")
         rescue ArgumentError
             @logger.error("Ambiguous exception occurred")
         rescue StandardError
@@ -186,6 +190,8 @@ class BigML
             @logger.error("Connection error")
         rescue RestClient::RequestTimeout
             @logger.error("Request timed out")
+        rescue JSON::ParserError
+            @logger.error("Invalid json #{response.body}")
         rescue ArgumentError
             @logger.error("Ambiguous exception occurred")
         rescue StandardError
@@ -236,6 +242,8 @@ class BigML
             @logger.error("Connection error")
         rescue RestClient::RequestTimeout
             @logger.error("Request timed out")
+        rescue JSON::ParserError
+            @logger.error("Invalid json #{response.body}")
         rescue ArgumentError
             @logger.error("Ambiguous exception occurred")
         rescue StandardError
@@ -278,6 +286,8 @@ class BigML
             @logger.error("Connection error")
         rescue RestClient::RequestTimeout
             @logger.error("Request timed out")
+        rescue JSON::ParserError
+            @logger.error("Invalid json #{response.body}")
         rescue ArgumentError
             @logger.error("Ambiguous exception occurred")
         rescue StandardError

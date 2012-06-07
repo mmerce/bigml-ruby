@@ -123,31 +123,34 @@ You can easily generate a prediction following these steps:
 require 'rubygems'
 require 'bigml'
 
-source = BigMLSource.create('./data/iris.csv')
-dataset = BigMLDataset.create(source)
-model = BigMLModel.create(dataset)
-prediction = BigMLPrediction.create(model, {'sepal length' => 5, 
+source = BigMLSource.create_resource('./data/iris.csv')
+dataset = BigMLDataset.create_resource(source)
+model = BigMLModel.create_resource(dataset)
+prediction = BigMLPrediction.create_resource(model, {'sepal length' => 5, 
                                             'sepal width' => 2.5})
 ```
-where the static methods return the object properties in a hash format, 
-or you might as well instantiate source, dataset, model and prediction objects 
+where the static methods return the object properties in a hash format. Either
+the hash or the resource id can be used as the parameter for the next `create_resource` 
+call. You might as well instantiate source, dataset, model and prediction objects 
 for further use
 
 ```ruby
 require 'rubygems'
 require 'bigml'
 
-source = BigMLSource.new(:file => './data/iris.csv')
-dataset = BigMLDataset.new(:source => source.get_id)
-model = BigMLModel.new(:dataset => dataset.get_id)
-prediction = BigMLPrediction.new(:model => model.get_id, 
-                                 :input_data => {'sepal length' => 5, 
-                                                 'sepal width' => 2.5})
+source = BigMLSource.create('./data/iris.csv')
+dataset = BigMLDataset.create(source)
+model = BigMLModel.create(dataset)
+prediction = BigMLPrediction.create(model, {'sepal length' => 5, 
+                                            'sepal width' => 2.5})
 ```
+In this case, as you see, the source object itself can also be used as input for the next 
+`BigMLDataset.create` call, but you might as well use the previously discussed 
+properties hash or the resource id.
 
 ## Fields
 
-BigML automatically generates idenfiers for each field. To see the
+BigML automatically generates identifiers for each field. To see the
 fields and the ids and types that have been assigned to a source you
 can use `get_fields`:
 
@@ -156,7 +159,7 @@ require 'rubygems'
 require 'bigml'
 require 'pp'
 
-source = BigMLSource.create('./data/iris.csv')
+source = BigMLSource.create_resource('./data/iris.csv')
 pp BigMLSource.get_fields(source)
 ```
 or using objects' syntax
@@ -166,7 +169,7 @@ require 'rubygems'
 require 'bigml'
 require 'pp'
 
-source = BigMLSource.new(:file => './data/iris.csv')
+source = BigMLSource.create('./data/iris.csv')
 pp source.get_fields
 ```
 
@@ -192,8 +195,9 @@ pp BigMLDataset.get_fields(dataset)
 ```
 
 or using instantiated objects
+
 ```ruby
-dataset = BigMLDataset.new(:dataset => 'dataset/4fcfd1a515526871bb00008c')
+dataset = BigMLDataset.new('dataset/4fcfd1a515526871bb00008c')
 pp dataset.get_fields
 ```
 
@@ -286,7 +290,7 @@ pp model[:object][:model][:root]
 or using objects
 
 ```ruby
-model = BigMLModel.new(:model => 'model/4fcfd178035d0742cc000087')
+model = BigMLModel.new('model/4fcfd178035d0742cc000087')
 pp model.get[:object][:model][:root]
 ```
 
@@ -390,7 +394,7 @@ the `wait_time` argument. By default, it is set to 3 seconds.
 ### Creating sources
 
 To create a source from a local data file, you can use the
-`create` method. The only required parameter is the path to the
+`create_request` method. The only required parameter is the path to the
 data file. You can use a second optional parameter to specify any of
 the options for source creation described in the
 [BigML API documentation](https://bigml.com/developers/sources).
@@ -402,10 +406,10 @@ Here's a sample invocation:
 require 'rubygems'
 require 'bigml'
 
-source = BigMLSource.create('./data/iris.csv',
+source = BigMLSource.create_resource('./data/iris.csv',
     {:name => 'my source', :source_parser => {:missing_tokens => ['?']}})
 ```
-
+It's result would be a hash with the source's properties.
 As already mentioned, source creation is asynchronous: the initial
 resource status code will be either `WAITING` or `QUEUED`. You can
 retrieve the updated status at any time using the corresponding get
@@ -415,10 +419,7 @@ method. For example, to get the status of our source we would use:
 BigMLSource.status(source)
 ```
 
-You can also achieve the same results by instantiating a new BigMLSource object. 
-It's constructor accepts as possible parameters :file, :source and :args. :file
-must contain the file name, :args is the optional hash with options for source creation and 
-:source should be the source id string for a previously created source. 
+You can also achieve the same results by creating a new instance of BigMLSource. 
 
 In this case, the invocation would be as follows:
 
@@ -427,14 +428,21 @@ In this case, the invocation would be as follows:
 require 'rubygems'
 require 'bigml'
 
-source = BigMLSource.new(:file => './data/iris.csv',
-    :args => {:name => 'my source', :source_parser => {:missing_tokens => ['?']}})
+source = BigMLSource.create('./data/iris.csv',
+            {:name => 'my source', :source_parser => {:missing_tokens => ['?']}})
 ```
 
 and to check it's status we could use
 
 ```ruby
 source.status
+```
+
+You can always create a new instance for a previously existing source by calling the 
+constructor with another source instance, a source properties hash or a source id string.
+
+```ruby
+source = BigMLSource.new('source/4fd12cfb1552682fd1000156')
 ```
 
  
@@ -449,25 +457,29 @@ For example, to create a dataset named "my dataset" with the first
 1024 bytes of a source, you can submit the following request:
 
 ```ruby
-dataset = BigMLDataset.create(source, {:name => "my dataset", :size => 1024})
+dataset = BigMLDataset.create_resource(source, {:name => "my dataset", :size => 1024})
 ```
 
-Upon success, the dataset creation job will be queued for execution,
-and you can follow its evolution using `BigMLDataset.status(dataset)`.
+A hash of dataset's properties will be returned. Upon success, the dataset 
+creation job will be queued for execution, and you can follow its evolution 
+using `BigMLDataset.status(dataset)`.
 
-Again, you could also define a new dataset object. The constructor's valid 
-parameters are :dataset, :source, :args and :wait_time. :dataset is the string 
-used as dataset id for a previously existing dataset. The rest of parameters 
-are used when creating a new dataset, where :source should be the string used as 
-source id, :args the optional arguments and :wait_time the lapse of time used
-in the create process when waiting for the source.status to be FINISHED. Then, 
+Again, you could also define a dataset object calling `create`. Then, 
 the previous example would read:
 
 ```ruby
-dataset = BigMLDataset.new(:source => source.get_id, 
-                           :args => {:name => "my dataset", :size => 1024})
+dataset = BigMLDataset.create(source, {:name => "my dataset", :size => 1024})
 ```
-and it's status would be obtained by asking for `dataset.status`.
+where `source` can be a source object, a source properties hash or a source id 
+string and it's status would be obtained by asking for `dataset.status`.
+
+To obtain an instance of a previously created database, you just have to 
+call the `BigMLDatabase` constructor with a database object, a database 
+properties hash or a database id.
+
+```ruby
+database = BigMLDatabase.new('database/4fd12cfb1552682fd1000156')
+```
 
 ### Creating models
 
@@ -481,7 +493,7 @@ the first 10 instances in the dataset, you can use the following
 invocation:
 
 ```ruby
-model = BigMLModel.create(dataset, {
+model = BigMLModel.create_resource(dataset, {
     :name => "my model", 
     :input_fields => ["000000", "000001"], 
     :range => [1, 10]})
@@ -490,21 +502,27 @@ model = BigMLModel.create(dataset, {
 Again, the model is scheduled for creation, and you can retrieve its
 status at any time by means of `BigMLModel.status(model)` .
 
-You might also use the constructor, whose valid parameters are :model, :dataset, 
-:args and :wait_time. As in the dataset case, :model should be a previously created
-model id string, and creating a new one would need :dataset as a dataset string id, 
-and optionally :args for the options hash and :wait_time as the lapse of time to 
-use when waiting for dataset.status to be FINISHED. Then the previous example 
-would be:
+Or you could create a `BigMLModel` instance by providing the dataset. Then 
+the previous example would be:
 
 ```ruby
-model = BigMLModel.new(:dataset => dataset.get_id, :args => {
+model = BigMLModel.create(dataset, {
     :name => "my model", 
     :input_fields => ["000000", "000001"], 
     :range => [1, 10]})
 ```
+where `dataset` can be a dataset object, a dataset properties hash or a dataset
+id string.
 
 and it's status could be checked by using `model.status`.
+
+Also, new instances can be constructed for previously existing models by passing 
+as argument a model object, a model properties hash or a model id string.
+
+```ruby
+model = BigMLModel.new('model/4fd12cfb1552682fd1000156')
+```
+
 
 ### Creating predictions
 
@@ -513,10 +531,10 @@ parameters to ask for predictions, using the `create`
 method. You can also give the prediction a name.
 
 ```ruby
-prediction = BigMLPrediction.create(model,
-                                   {'sepal length' => 5,
-                                    'sepal width' => 2.5},
-                                    {:name => "my prediction"})
+prediction = BigMLPrediction.create_resource(model,
+                                             {'sepal length' => 5,
+                                              'sepal width' => 2.5},
+                                              {:name => "my prediction"})
 ```
 
 To see the prediction you can use `pp`:
@@ -525,25 +543,30 @@ To see the prediction you can use `pp`:
 pp prediction
 ```
 
-And to use object instantiation, the valid parameters for the prediction
-constructor are :prediction, :model, :input_data, :args and :wait_time. :prediction should
-be a previously existing prediction id string, and the rest of them are used
-when creating a new prediction. :model should be an existing model id string, 
-:input_data the fixed {field => value} set on which you want to predict,
-:args the optional arguments and :wait_time (optional too) the lapse of time used when waiting 
-for the model status to be FINISHED. Then, prediction creation would read:
+And to use object instantiation, call `create` with the same list of arguments. 
+Then, prediction creation would read:
 
 ```ruby
-prediction = BigMLPrediction.new(:model => model.get_id,
-                                 :input_data => {'sepal length' => 5,
+prediction = BigMLPrediction.create(model,{'sepal length' => 5,
                                            'sepal width' => 2.5},
-                                 :args => {:name => "my prediction"})
+                                          {:name => "my prediction"})
 ```
+where `model` can be a model object, a model properties hash or a model id 
+string.
 To see the prediction you can use `pp`:
 
 ```ruby
 pp prediction.get
 ```
+
+Instances of previously existing predictions can be created by calling the 
+constructor with a prediction object, a prediction properties hash or a 
+prediction id string
+
+```ruby
+prediction = BigMLPrediction.new('prediction/4fd12cfb1552682fd1000156')
+```
+
 ## Reading Resources
 
 When retrieved individually, resources are returned as a dictionary

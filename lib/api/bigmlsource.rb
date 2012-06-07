@@ -28,48 +28,56 @@ class BigMLSource
     @@bigml = BigML.instance
     @resource_id = nil
 
-    def initialize(params)
-        #Initialize source instance.
-        if source = params[:source] and not source.nil? and source_id = @@bigml._check_resource_id(source, :source)
+    def initialize(source)
+        # Initialize source instance.
+        raise("A source id string is required to instantiate BigMLSource object") if source.nil?
+        source = source.get_id if source.is_a? BigMLSource
+        if source_id = @@bigml._check_resource_id(source, :source)
             @resource_id = source_id
-        end
-        if file = params[:file] and not file.nil?
-            args = params[:args]
-            source = BigMLSource.create(file, args)
-            @resource_id = source[:resource]
-        end
-        if @resource_id.nil?
-            raise("Either a file name or a source_id is required.")
+        else 
+            raise("A valid source id string is required to instantiate BigMLSource object")
         end
     end
 
     def get_id
+        # get source's id
         return @resource_id
     end
 
     def get
+        # get source's info 
         return BigMLSource.get(@resource_id) if not @resource_id.nil?
     end
 
     def update(changes)
+        # update source's properties
         return BigMLSource.update(@resource_id, changes) if not @resource_id.nil?
     end
 
     def delete
+        # delete source
         return BigMLSource.delete(@resource_id) if not @resource_id.nil?
     end
 
     def get_fields
+        # get source's fields
        return BigMLSource.get_fields(@resource_id) if not @resource_id.nil?
     end
 
     def status
+        # get source's status
         return BigMLSource.status(@resource_id) if not @resource_id.nil?
     end
 
     class << self
 
         def create(file_name, args=nil)
+            # create a new source and instantiate the corresponding object
+            source = BigMLSource.create_resource(file_name, args)
+            return BigMLSource.new(source[:resource])
+        end
+
+        def create_resource(file_name, args=nil)
             # Create a new source.
             if args != nil and args.include? :source_parser
                 args[:source_parser] = args[:source_parser].to_json
