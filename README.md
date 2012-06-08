@@ -80,9 +80,9 @@ To run the tests you just have to
 ```bash
 $ bundle install
 ```
-which checks for dependencies.
-You also will need to set up your authentication via environment variables, 
-as explained above.  With that in place, you can run the test suite simply by:
+which manages dependencies. You also will need to set up your authentication 
+via environment variables, as explained above. With that in place, you can run 
+the test suite simply by:
 
 ```bash
 $ cd tests
