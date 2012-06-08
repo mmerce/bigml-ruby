@@ -31,7 +31,7 @@ class BigMLSource
     def initialize(source)
         # Initialize source instance.
         raise("A source id string is required to instantiate BigMLSource object") if source.nil?
-        source = source.get_id if source.is_a? BigMLSource
+        source = source.id if source.is_a? BigMLSource
         if source_id = @@bigml._check_resource_id(source, :source)
             @resource_id = source_id
         else 
@@ -39,7 +39,7 @@ class BigMLSource
         end
     end
 
-    def get_id
+    def id
         # get source's id
         return @resource_id
     end
@@ -59,9 +59,9 @@ class BigMLSource
         return BigMLSource.delete(@resource_id) if not @resource_id.nil?
     end
 
-    def get_fields
+    def fields
         # get source's fields
-       return BigMLSource.get_fields(@resource_id) if not @resource_id.nil?
+       return BigMLSource.fields(@resource_id) if not @resource_id.nil?
     end
 
     def status
@@ -119,9 +119,9 @@ class BigMLSource
             return @@bigml._delete("#{BigML::BIGML_URL}#{source_id}")
         end
 
-        def get_fields(source)
+        def fields(source)
             # Get fields from source
-            return @@bigml._get_fields(source)
+            return @@bigml._fields(source)
         end
 
         def status(source)

@@ -32,7 +32,7 @@ class BigMLModel
     def initialize(model)
         #Initialize model instance.
         raise("A model id string is required to instantiate BigMLModel object") if model.nil?
-        model = model.get_id if model.is_a? BigMLModel
+        model = model.id if model.is_a? BigMLModel
         if model_id = @@bigml._check_resource_id(model, :model)
             @resource_id = model_id
         else 
@@ -40,7 +40,7 @@ class BigMLModel
         end
     end
 
-    def get_id
+    def id
         # get model's id
         return @resource_id
     end
@@ -69,7 +69,7 @@ class BigMLModel
 
         def create(dataset, args=nil, wait_time=3)
             # create a new dataset and instantiate the corresponding object
-            dataset = dataset.get_id if dataset.is_a? BigMLDataset
+            dataset = dataset.id if dataset.is_a? BigMLDataset
             model = BigMLModel.create_resource(dataset, args, wait_time)
             raise("Model could not be created. Please make sure you are providing a valid dataset id.") if model.nil?
             return BigMLModel.new(model[:resource])

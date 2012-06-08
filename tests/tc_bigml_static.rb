@@ -21,8 +21,8 @@ class TestBigMLStatic < Test::Unit::TestCase
         source = BigMLSource.create_resource('./data/iris.csv')
         assert_equal(BigML::HTTP_CREATED, source[:code], "create_resource: source creation failure")
         assert_equal(source[:resource], BigMLSource.get(source[:resource])[:resource], "get: source properties retrieval failure")
-        fields = BigMLSource.get_fields(source)
-        assert_equal(@source_fields, fields, "get_fields: source's fields retrieval failure")
+        fields = BigMLSource.fields(source)
+        assert_equal(@source_fields, fields, "fields: source's fields retrieval failure")
         assert_equal('new name', BigMLSource.update(source, {:name => 'new name'})[:object][:name], "update: source properties update failure")
         status = BigMLSource.status(source)
         assert(BigML::STATUSES.has_value?(status), "status: <"+status+">source's status retrieval failure")
@@ -31,8 +31,8 @@ class TestBigMLStatic < Test::Unit::TestCase
         dataset = BigMLDataset.create_resource(source)
         assert_equal(BigML::HTTP_CREATED, dataset[:code], "create_resource: dataset creation failure")
         assert_equal(dataset[:resource], BigMLDataset.get(dataset[:resource])[:resource], "get: dataset properties retrieval failure")
-        fields = BigMLDataset.get_fields(dataset)
-        assert_equal(@dataset_fields, fields, "get_fields: dataset's fields retrieval failure")
+        fields = BigMLDataset.fields(dataset)
+        assert_equal(@dataset_fields, fields, "fields: dataset's fields retrieval failure")
 
         # model testing
         model = BigMLModel.create_resource(dataset)

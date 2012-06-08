@@ -32,7 +32,7 @@ class BigMLPrediction
     def initialize(prediction)
         #Initialize prediction instance.
         raise("A prediction id string is required to instantiate BigMLPrediction object") if prediction.nil?
-        prediction = prediction.get_id if prediction.is_a? BigMLPrediction
+        prediction = prediction.id if prediction.is_a? BigMLPrediction
         if prediction_id = @@bigml._check_resource_id(prediction, :prediction)
             @resource_id = prediction_id
         else 
@@ -40,7 +40,7 @@ class BigMLPrediction
         end
     end
 
-    def get_id
+    def id
         # get prediction's id
         return @resource_id
     end
@@ -69,7 +69,7 @@ class BigMLPrediction
 
         def create(model, input_data=nil, args=nil, wait_time=3)
             # create a new model and instantiate the corresponding object
-            model = model.get_id if model.is_a? BigMLModel
+            model = model.id if model.is_a? BigMLModel
             prediction = BigMLPrediction.create_resource(model, input_data, args, wait_time)
             raise("Prediction could not be created. Please make sure you are providing a valid model id.") if prediction.nil?
             return BigMLPrediction.new(prediction[:resource])
@@ -93,7 +93,7 @@ class BigMLPrediction
                 input_data = {}
             else
                 new_input_data = {}
-                fields = @@bigml._get_fields(model_id)
+                fields = @@bigml._fields(model_id)
                 inverted_fields = {}
                 fields.each { |key, value|
                     inverted_fields[value[:name]] = key

@@ -153,7 +153,7 @@ properties hash or the resource id.
 
 BigML automatically generates identifiers for each field. To see the
 fields and the ids and types that have been assigned to a source you
-can use `get_fields`:
+can use `fields`:
 
 ```ruby
 require 'rubygems'
@@ -161,7 +161,7 @@ require 'bigml'
 require 'pp'
 
 source = BigMLSource.create_resource('./data/iris.csv')
-pp BigMLSource.get_fields(source)
+pp BigMLSource.fields(source)
 ```
 or using objects' syntax
 
@@ -171,7 +171,7 @@ require 'bigml'
 require 'pp'
 
 source = BigMLSource.create('./data/iris.csv')
-pp source.get_fields
+pp source.fields
 ```
 
 and you'll get:
@@ -192,14 +192,14 @@ retrieve the `fields` from the dataset as follows:
 
 ```ruby
 dataset = BigMLDataset.get(dataset)
-pp BigMLDataset.get_fields(dataset)
+pp BigMLDataset.fields(dataset)
 ```
 
 or using instantiated objects
 
 ```ruby
 dataset = BigMLDataset.new('dataset/4fcfd1a515526871bb00008c')
-pp dataset.get_fields
+pp dataset.fields
 ```
 
 You will get a dictionary keyed by field id:

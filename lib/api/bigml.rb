@@ -346,7 +346,7 @@ class BigML
             resource[:object][:status][:code] == BigML::FINISHED)
     end
 
-    def _get_fields(resource)
+    def _fields(resource)
         # Return a dictionary of fields
         if not resource_id = _check_resource_id(resource)
             return false

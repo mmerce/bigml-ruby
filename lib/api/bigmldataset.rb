@@ -32,7 +32,7 @@ class BigMLDataset
     def initialize(dataset)
         #Initialize dataset instance.
         raise("A dataset id string is required to instantiate BigMLDataset object") if dataset.nil?
-        dataset = dataset.get_id if dataset.is_a? BigMLDataset
+        dataset = dataset.id if dataset.is_a? BigMLDataset
         if dataset_id = @@bigml._check_resource_id(dataset, :dataset)
             @resource_id = dataset_id
         else 
@@ -40,7 +40,7 @@ class BigMLDataset
         end
     end
 
-    def get_id
+    def id
         # get dataset's id
         return @resource_id
     end
@@ -60,9 +60,9 @@ class BigMLDataset
         return BigMLDataset.delete(@resource_id) if not @resource_id.nil?
     end
 
-    def get_fields
+    def fields
         # get dataset's fields
-        return BigMLDataset.get_fields(@resource_id) if not @resource_id.nil?
+        return BigMLDataset.fields(@resource_id) if not @resource_id.nil?
     end
 
     def status
@@ -74,7 +74,7 @@ class BigMLDataset
 
         def create(source, args=nil, wait_time=3)
             # create a new dataset and instantiate the corresponding object
-            source = source.get_id if source.is_a? BigMLSource
+            source = source.id if source.is_a? BigMLSource
             dataset = BigMLDataset.create_resource(source, args, wait_time)
             raise("Dataset could not be created. Please make sure you are providing a valid source id.") if dataset.nil?
             return BigMLDataset.new(dataset[:resource])
@@ -134,9 +134,9 @@ class BigMLDataset
             return @@bigml._delete("%s%s" % [BigML::BIGML_URL, dataset_id])
         end
 
-        def get_fields(dataset)
+        def fields(dataset)
             # Get fields from dataset
-            return @@bigml._get_fields(dataset)
+            return @@bigml._fields(dataset)
         end
 
         def status(dataset)
