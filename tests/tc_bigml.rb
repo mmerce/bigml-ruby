@@ -2,7 +2,7 @@ require 'test/unit'
 require 'rubygems'
 require 'bigml'
 
-class TestBigMLStatic < Test::Unit::TestCase
+class TestBigML < Test::Unit::TestCase
 
     def setup
         @source_fields = {:"000002"=>{:optype=>"numeric", :name=>"petal length", :column_number=>2},
