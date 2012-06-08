@@ -87,6 +87,7 @@ the test suite simply by:
 ```bash
 $ cd tests
 $ bundle exec cucumber
+$ bundle exec ruby ts_bigml.rb
 ```
 
 ## Quick Start
