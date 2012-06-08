@@ -98,7 +98,11 @@ class BigML
         rescue ArgumentError
             @logger.error("Ambiguous exception occurred")
         rescue StandardError
-            @logger.error("Malformed response")
+            if response.nil?
+                @logger.error("Resource not found #{url}")
+            else
+                @logger.error("Malformed response #{response}")
+            end
         end
 
         return {
@@ -146,7 +150,11 @@ class BigML
         rescue ArgumentError
             @logger.error("Ambiguous exception occurred")
         rescue StandardError
-            @logger.error("Malformed response")
+            if response.nil?
+                @logger.error("Resource not found #{url}")
+            else
+                @logger.error("Malformed response #{response}")
+            end
 
         end
 
@@ -186,6 +194,7 @@ class BigML
                 code = BigML::HTTP_INTERNAL_SERVER_ERROR
             end
 
+
         rescue RestClient::ServerBrokeConnection
             @logger.error("Connection error")
         rescue RestClient::RequestTimeout
@@ -195,7 +204,11 @@ class BigML
         rescue ArgumentError
             @logger.error("Ambiguous exception occurred")
         rescue StandardError
-            @logger.error("Malformed response")
+            if response.nil?
+                @logger.error("Resource not found #{url}")
+            else
+                @logger.error("Malformed response #{response}")
+            end
         end
 
         return {
@@ -221,7 +234,7 @@ class BigML
         begin
             response = RestClient.put url + @auth, body, BigML::SEND_JSON   
 
-            code = response.code
+                code = response.code
 
             if code == BigML::HTTP_ACCEPTED:
                 location = response.headers[:location]
@@ -247,7 +260,11 @@ class BigML
         rescue ArgumentError
             @logger.error("Ambiguous exception occurred")
         rescue StandardError
-            @logger.error("Malformed response")
+            if response.nil?
+                @logger.error("Resource not found #{url}")
+            else
+                @logger.error("Malformed response #{response}")
+            end
         end
 
         return {
@@ -269,7 +286,6 @@ class BigML
 
         begin
             response = RestClient.delete url + @auth
-
             code = response.code
 
             if code == BigML::HTTP_NO_CONTENT:
@@ -291,7 +307,11 @@ class BigML
         rescue ArgumentError
             @logger.error("Ambiguous exception occurred")
         rescue StandardError
-            @logger.error("Malformed response")
+            if response.nil?
+                @logger.error("Resource not found #{url}")
+            else
+                @logger.error("Malformed response #{response}")
+            end
         end
 
         return {
