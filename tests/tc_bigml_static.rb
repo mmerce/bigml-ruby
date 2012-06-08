@@ -18,14 +18,14 @@ class TestBigMLStatic < Test::Unit::TestCase
     def test_prediction_create
 
         # source testing
-        source = BigMLSource.create_resource('./data/iris.csv')
+        source = BigMLSource.create_resource('../data/iris.csv')
         assert_equal(BigML::HTTP_CREATED, source[:code], "create_resource: source creation failure")
         assert_equal(source[:resource], BigMLSource.get(source[:resource])[:resource], "get: source properties retrieval failure")
         fields = BigMLSource.fields(source)
         assert_equal(@source_fields, fields, "fields: source's fields retrieval failure")
         assert_equal('new name', BigMLSource.update(source, {:name => 'new name'})[:object][:name], "update: source properties update failure")
         status = BigMLSource.status(source)
-        assert(BigML::STATUSES.has_value?(status), "status: <"+status+">source's status retrieval failure")
+        assert(BigML::STATUSES.has_value?(status), "status: <"+status+"> source's status retrieval failure")
 
         # dataset testing
         dataset = BigMLDataset.create_resource(source)
@@ -33,17 +33,47 @@ class TestBigMLStatic < Test::Unit::TestCase
         assert_equal(dataset[:resource], BigMLDataset.get(dataset[:resource])[:resource], "get: dataset properties retrieval failure")
         fields = BigMLDataset.fields(dataset)
         assert_equal(@dataset_fields, fields, "fields: dataset's fields retrieval failure")
+        assert_equal('new name', BigMLDataset.update(dataset, {:name => 'new name'})[:object][:name], "update: dataset properties update failure")
+        status = BigMLDataset.status(dataset)
+        assert(BigML::STATUSES.has_value?(status), "status: <"+status+"> dataset's status retrieval failure")
 
         # model testing
         model = BigMLModel.create_resource(dataset)
         assert_equal(BigML::HTTP_CREATED, model[:code], "create_resource: model creation failure")
         assert_equal(model[:resource], BigMLModel.get(model[:resource])[:resource], "get: model properties retrieval failure")
+        assert_equal('new name', BigMLModel.update(model, {:name => 'new name'})[:object][:name], "update: model properties update failure")
+        status = BigMLModel.status(model)
+        assert(BigML::STATUSES.has_value?(status), "status: <"+status+"> model's status retrieval failure")
 
         # prediction testing
         prediction = BigMLPrediction.create_resource(model, {'sepal length' => 5, 
                                                     'sepal width' => 2.5})
         assert_equal(BigML::HTTP_CREATED, prediction[:code])
         assert_equal(prediction[:resource], BigMLPrediction.get(prediction[:resource])[:resource], "get: prediction properties retrieval failure")
+        assert_equal('new name', BigMLPrediction.update(prediction, {:name => 'new name'})[:object][:name], "update: prediction properties update failure")
+        status = BigMLPrediction.status(prediction)
+        assert(BigML::STATUSES.has_value?(status), "status: <"+status+"> prediction's status retrieval failure")
+
+        # test listing
+        list = BigMLSource.list("resource="+source[:resource])[:objects][0][:resource]
+        assert(list.include?(source[:resource]), "list: source's list could not be retrieved")
+        list = BigMLDataset.list("resource="+dataset[:resource])[:objects][0][:resource]
+        assert(list.include?(dataset[:resource]), "list: dataset's list could not be retrieved")
+        list = BigMLModel.list("resource="+model[:resource])[:objects][0][:resource]
+        assert(list.include?(model[:resource]), "list: model's list could not be retrieved")
+        list = BigMLPrediction.list("resource="+prediction[:resource])[:objects][0][:resource]
+        assert(list.include?(prediction[:resource]), "list: prediction's list could not be retrieved")
+
+        # test resources's deletion
+        BigMLSource.delete(source)
+        assert_equal(nil, BigMLSource.get(source)[:resource], "delete: source could not be deleted")
+        BigMLDataset.delete(dataset)
+        assert_equal(nil, BigMLDataset.get(dataset)[:resource], "delete: dataset could not be deleted")
+        BigMLModel.delete(model)
+        assert_equal(nil, BigMLModel.get(model)[:resource], "delete: model could not be deleted")
+        BigMLPrediction.delete(prediction)
+        assert_equal(nil, BigMLPrediction.get(prediction)[:resource], "delete: prediction could not be deleted")
+
     end
 
 end
